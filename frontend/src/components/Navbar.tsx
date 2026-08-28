@@ -137,9 +137,6 @@ export default function Navbar() {
       </div>
 
       <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-        <Link to="/audit" className="text-sm text-muted hover:text-primary transition-colors">
-          Audit
-        </Link>
         <div className="text-right hidden sm:block">
           <p className="text-sm font-medium text-primary">{user?.name || 'User'}</p>
           <p className="text-xs text-muted">{user?.email}</p>

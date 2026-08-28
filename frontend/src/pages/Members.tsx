@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent, ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Folder, Loader2, Trash2, UserPlus, Users, X, Copy } from 'lucide-react';
+import { Folder, Loader2, Trash2, UserPlus, Users, X, Copy, ShieldCheck } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 import Navbar from '../components/Navbar';
@@ -141,6 +141,13 @@ export default function Members() {
             <Users className="w-4 h-4 text-accent" />
             Members
           </div>
+          <Link
+            to="/audit"
+            className="w-full h-9 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4 text-accent" />
+            Audit
+          </Link>
         </aside>
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6">

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, ArrowLeft, Loader2 } from 'lucide-react';
+import { Activity, Folder, Users, ShieldCheck, Loader2 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 import { AuditLog } from '../types';
@@ -42,18 +42,47 @@ const Audit = () => {
     <div className="min-h-screen bg-bg transition-colors">
       <Navbar />
 
-      <main className="w-full max-w-7xl mx-auto px-6 py-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
-          <div>
-            <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary transition-colors mb-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
+      <div className="flex min-h-[calc(100vh-3.5rem)]">
+        <aside className="w-72 shrink-0 border-r border-border bg-surface p-4 hidden md:block transition-colors">
+          <Link
+            to="/dashboard"
+            className="w-full py-2 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+          >
+            <Folder className="w-4 h-4 text-accent" />
+            My Drive
+          </Link>
+          <Link
+            to="/dashboard?view=shared"
+            className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+          >
+            <Users className="w-4 h-4 text-accent" />
+            Shared with me
+          </Link>
+
+          {user?.orgMemberships && user.orgMemberships.length > 0 && (
+            <Link
+              to="/org/members"
+              className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+            >
+              <Users className="w-4 h-4 text-accent" />
+              Members
             </Link>
-            <h1 className="text-xl font-semibold text-primary flex items-center gap-2">
-              <Activity className="w-5 h-5 text-accent" />
-              Audit Log
-            </h1>
+          )}
+
+          <div className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left bg-accent/10 text-accent font-medium transition-colors">
+            <ShieldCheck className="w-4 h-4 text-accent" />
+            Audit
           </div>
+        </aside>
+
+        <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
+            <div>
+              <h1 className="text-xl font-semibold text-primary flex items-center gap-2">
+                <Activity className="w-5 h-5 text-accent" />
+                Audit Log
+              </h1>
+            </div>
           <div className="flex items-center gap-2.5">
             {canViewOrg && (
               <select
@@ -116,7 +145,8 @@ const Audit = () => {
             </div>
           )}
         </section>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
