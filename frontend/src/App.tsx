@@ -7,6 +7,7 @@ import ShareLink from './pages/ShareLink';
 import ProtectedRoute from './components/ProtectedRoute';
 import Members from './pages/Members';
 import AcceptInvite from './pages/AcceptInvite';
+import Trash from './pages/Trash';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
       <Route
         path="/org/members"
         element={

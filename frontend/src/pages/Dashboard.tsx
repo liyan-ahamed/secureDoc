@@ -357,11 +357,11 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bg transition-colors">
+    <div className="min-h-screen">
       <Navbar />
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-border bg-surface p-4 hidden md:block transition-colors">
+        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden md:block">
           <button
             onClick={() => { setFolderName(''); setFolderModal({ mode: 'create' }); }}
             className="w-full py-2 px-4 mb-4 rounded-md bg-accent text-bg text-sm font-medium flex items-center justify-center gap-2 hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
@@ -410,6 +410,14 @@ const Dashboard = () => {
           >
             <ShieldCheck className="w-4 h-4 text-accent" />
             Audit
+          </Link>
+
+          <Link
+            to="/trash"
+            className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+          >
+            <Trash2 className="w-4 h-4 text-accent" />
+            Trash
           </Link>
 
           <div className="mt-4 pt-3 border-t border-border space-y-0.5">
@@ -482,7 +490,7 @@ const Dashboard = () => {
             <input ref={versionUploadInputRef} type="file" className="hidden" onChange={handleVersionUpload} />
           </div>
 
-          <section className="bg-surface border border-border rounded-lg shadow-sm dark:shadow-xl dark:shadow-black/40 overflow-hidden transition-colors">
+          <section className="glass-panel rounded-2xl overflow-hidden">
             <TableHeader />
             {loading ? (
               <div className="h-52 flex items-center justify-center text-muted text-sm gap-2">
@@ -543,7 +551,7 @@ const Dashboard = () => {
 
       {menu && (
         <div
-          className="fixed z-30 w-48 rounded-md border border-border bg-surface shadow-xl dark:shadow-2xl dark:shadow-black/70 py-1 transition-colors"
+          className="fixed z-30 w-48 glass-panel rounded-xl py-1"
           style={{ left: menu.x, top: menu.y }}
           onClick={(event) => event.stopPropagation()}
         >
@@ -745,7 +753,7 @@ const Dashboard = () => {
 
       {toast && (
         <div
-          className={`fixed right-5 bottom-5 z-50 rounded-lg px-4 py-3 text-sm font-medium shadow-lg dark:shadow-2xl flex items-center gap-2 backdrop-blur-md transition-all ${
+          className={`fixed right-5 bottom-5 z-50 rounded-xl px-4 py-3 text-sm font-medium shadow-2xl shadow-black/30 flex items-center gap-2 backdrop-blur-xl transition-all ${
             toast.type === 'success'
               ? 'bg-success/15 text-success border border-success/30'
               : 'bg-danger/15 text-danger border border-danger/30'
@@ -857,14 +865,14 @@ const FolderRow = ({ folder, onOpen, onShare, onMenu }: { folder: SecureFolder; 
     <div className="justify-self-end flex items-center gap-1">
       <button
         onClick={onShare}
-        className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
         title="Share"
       >
         <Share2 className="w-4 h-4" />
       </button>
       <button
         onClick={onMenu}
-        className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
         title="More"
       >
         <MoreHorizontal className="w-4 h-4" />
@@ -890,28 +898,28 @@ const FileRow = ({ file, onDownload, onVersions, onShare, onMenu }: { file: Secu
       <div className="justify-self-end flex items-center gap-1">
         <button
           onClick={onDownload}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
           title="Download"
         >
           <Download className="w-4 h-4" />
         </button>
         <button
           onClick={onVersions}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
           title="Versions"
         >
           <History className="w-4 h-4" />
         </button>
         <button
           onClick={onShare}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
           title="Share"
         >
           <Share2 className="w-4 h-4" />
         </button>
         <button
           onClick={onMenu}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
           title="More"
         >
           <MoreHorizontal className="w-4 h-4" />
@@ -955,14 +963,14 @@ const SharedFileRow = ({ share, file, onDownload, onVersions, onUploadVersion }:
       <div className="justify-self-end flex items-center gap-1">
         <button
           onClick={onDownload}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
           title="Download"
         >
           <Download className="w-4 h-4" />
         </button>
         <button
           onClick={onVersions}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
           title="Versions"
         >
           <History className="w-4 h-4" />
@@ -970,7 +978,7 @@ const SharedFileRow = ({ share, file, onDownload, onVersions, onUploadVersion }:
         {share.permission === 'EDIT' && (
           <button
             onClick={onUploadVersion}
-            className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
             title="Upload new version"
           >
             <Upload className="w-4 h-4" />
@@ -1001,8 +1009,8 @@ const MenuButton = ({ onClick, icon: Icon, label, danger = false }: { onClick: (
 );
 
 const Modal = ({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) => (
-  <div className="fixed inset-0 z-40 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center px-4 transition-all">
-    <div className={`bg-surface rounded-lg border border-border shadow-xl dark:shadow-2xl dark:shadow-black/70 ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'} overflow-hidden transition-colors`}>
+  <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center px-4 transition-all">
+    <div className={`glass-panel rounded-2xl ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'} overflow-hidden`}>
       <div className="h-12 px-5 border-b border-border flex items-center justify-between">
         <h2 className="text-sm font-semibold text-primary truncate pr-4">{title}</h2>
         <button

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, Folder, Users, ShieldCheck, Loader2 } from 'lucide-react';
+import { Activity, Folder, Users, ShieldCheck, Loader2, Trash2 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 import { AuditLog } from '../types';
 import Navbar from '../components/Navbar';
 
-const actions = ['ALL', 'UPLOAD', 'DOWNLOAD', 'SHARE', 'REVOKE_SHARE', 'DELETE', 'RESTORE', 'LOGIN', 'SIGNUP'];
+const actions = ['ALL', 'UPLOAD', 'DOWNLOAD', 'SHARE', 'REVOKE_SHARE', 'DELETE', 'RESTORE', 'PERMANENT_DELETE', 'AUTO_PURGE', 'LOGIN', 'SIGNUP'];
 
 const Audit = () => {
   const { user } = useAuthStore();
@@ -39,11 +39,11 @@ const Audit = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bg transition-colors">
+    <div className="min-h-screen">
       <Navbar />
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-border bg-surface p-4 hidden md:block transition-colors">
+        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden md:block">
           <Link
             to="/dashboard"
             className="w-full py-2 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
@@ -73,6 +73,9 @@ const Audit = () => {
             <ShieldCheck className="w-4 h-4 text-accent" />
             Audit
           </div>
+          <Link to="/trash" className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors">
+            <Trash2 className="w-4 h-4 text-accent" />Trash
+          </Link>
         </aside>
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6">
@@ -108,7 +111,7 @@ const Audit = () => {
           </div>
         </div>
 
-        <section className="bg-surface border border-border rounded-lg shadow-sm dark:shadow-xl dark:shadow-black/40 overflow-hidden transition-colors">
+        <section className="glass-panel rounded-2xl overflow-hidden">
           <div className="grid grid-cols-[160px_130px_1fr] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
             <span>Timestamp</span>
             <span>Action</span>

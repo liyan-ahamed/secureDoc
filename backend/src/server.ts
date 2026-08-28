@@ -7,6 +7,7 @@ import routes from './routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import prisma from './config/database';
 import redis from './config/redis';
+import { autoPurgeTrash } from './services/trash';
 
 const app = express();
 
@@ -53,6 +54,10 @@ const startServer = async () => {
     console.log(`📋 Health check: http://localhost:${config.port}/api/health`);
     console.log(`🌍 Environment: ${config.nodeEnv}\n`);
   });
+
+  const purgeTrash = () => autoPurgeTrash().catch((error) => console.error('Automatic trash purge failed:', error));
+  purgeTrash();
+  setInterval(purgeTrash, 60 * 60 * 1000);
 };
 
 // Graceful shutdown

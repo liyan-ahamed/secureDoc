@@ -118,11 +118,11 @@ export default function Members() {
   };
 
   return (
-    <div className="min-h-screen bg-bg transition-colors">
+    <div className="min-h-screen">
       <Navbar />
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-border bg-surface p-4 hidden md:block transition-colors">
+        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden md:block">
           <Link
             to="/dashboard"
             className="w-full h-9 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
@@ -167,7 +167,7 @@ export default function Members() {
             )}
           </div>
 
-          <section className="bg-surface border border-border rounded-lg shadow-sm dark:shadow-xl dark:shadow-black/40 overflow-hidden transition-colors">
+          <section className="glass-panel rounded-2xl overflow-hidden">
             <div className="grid grid-cols-[1fr_120px_150px_100px] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
               <span>Member</span>
               <span>Role</span>
@@ -316,8 +316,8 @@ export default function Members() {
 }
 
 const Modal = ({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void; }) => (
-  <div className="fixed inset-0 z-40 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center px-4 transition-all">
-    <div className="bg-surface rounded-lg border border-border shadow-xl dark:shadow-2xl dark:shadow-black/70 w-full max-w-md overflow-hidden transition-colors">
+  <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center px-4 transition-all">
+    <div className="glass-panel rounded-2xl w-full max-w-md overflow-hidden">
       <div className="h-12 px-5 border-b border-border flex items-center justify-between">
         <h2 className="text-sm font-semibold text-primary truncate pr-4">{title}</h2>
         <button

@@ -3,9 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, Shield, Building2, User, Sun, Moon } from 'lucide-react';
+import { Lock, Mail, Shield, Building2, User } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { useTheme } from '../hooks/useTheme';
 import api from '../api/axios';
 import type { SignupFormData } from '../types';
 
@@ -33,7 +32,6 @@ const signupSchema = z
 const Signup = () => {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
-  const { isDark, toggleTheme } = useTheme();
   const [accountType, setAccountType] = useState<'INDIVIDUAL' | 'ORGANIZATION'>('INDIVIDUAL');
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -73,20 +71,11 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-bg relative transition-colors">
-      <button
-        onClick={toggleTheme}
-        aria-label="Toggle theme"
-        title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        className="absolute top-5 right-5 w-9 h-9 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface border border-border transition-colors cursor-pointer shadow-sm"
-      >
-        {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-      </button>
-
+    <div className="min-h-screen flex items-center justify-center px-4 py-10 relative">
       <div className="w-full max-w-md">
         {/* Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-accent text-bg mb-4 shadow-sm">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-accent text-white mb-4 shadow-xl shadow-indigo-500/25">
             <Shield className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold text-primary">SecureDoc</h1>
@@ -94,7 +83,7 @@ const Signup = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-surface rounded-xl p-8 shadow-sm dark:shadow-2xl dark:shadow-black/50 border border-border transition-colors">
+        <div className="glass-panel rounded-2xl p-8">
           {/* API Error */}
           {apiError && (
             <div className="mb-5 px-4 py-3 rounded-lg bg-danger/10 border border-danger/20 text-danger text-sm">
@@ -113,7 +102,7 @@ const Signup = () => {
                   className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg border text-sm font-medium transition-all cursor-pointer ${
                     accountType === 'INDIVIDUAL'
                       ? 'border-accent bg-accent/10 text-accent ring-1 ring-accent/30'
-                      : 'border-border bg-bg text-muted hover:border-muted/50 hover:text-primary'
+                      : 'border-white/10 bg-white/5 text-muted hover:border-white/25 hover:text-primary'
                   }`}
                 >
                   <User className="w-4 h-4" />
@@ -125,7 +114,7 @@ const Signup = () => {
                   className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg border text-sm font-medium transition-all cursor-pointer ${
                     accountType === 'ORGANIZATION'
                       ? 'border-accent bg-accent/10 text-accent ring-1 ring-accent/30'
-                      : 'border-border bg-bg text-muted hover:border-muted/50 hover:text-primary'
+                      : 'border-white/10 bg-white/5 text-muted hover:border-white/25 hover:text-primary'
                   }`}
                 >
                   <Building2 className="w-4 h-4" />
@@ -144,7 +133,7 @@ const Signup = () => {
                 id="signup-name"
                 type="text"
                 {...register('name')}
-                className="w-full px-4 py-2 rounded-lg text-primary bg-bg border border-border placeholder-muted/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                className="glass-input w-full px-4 py-2.5 rounded-xl text-primary placeholder-muted transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                 placeholder="John Doe"
               />
               {errors.name && (
@@ -164,7 +153,7 @@ const Signup = () => {
                     id="signup-orgname"
                     type="text"
                     {...register('orgName')}
-                    className="w-full pl-10 pr-4 py-2 rounded-lg text-primary bg-bg border border-border placeholder-muted/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                    className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-primary placeholder-muted transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                     placeholder="Acme Inc."
                   />
                 </div>
@@ -185,7 +174,7 @@ const Signup = () => {
                   id="signup-email"
                   type="email"
                   {...register('email')}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg text-primary bg-bg border border-border placeholder-muted/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                  className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-primary placeholder-muted transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                   placeholder="you@example.com"
                 />
               </div>
@@ -205,7 +194,7 @@ const Signup = () => {
                   id="signup-password"
                   type="password"
                   {...register('password')}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg text-primary bg-bg border border-border placeholder-muted/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                  className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-primary placeholder-muted transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                   placeholder="Min. 8 characters"
                 />
               </div>
@@ -225,7 +214,7 @@ const Signup = () => {
                   id="signup-confirm"
                   type="password"
                   {...register('confirmPassword')}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg text-primary bg-bg border border-border placeholder-muted/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                  className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-primary placeholder-muted transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                   placeholder="Re-enter your password"
                 />
               </div>
@@ -238,7 +227,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 px-4 rounded-lg bg-accent text-bg font-medium text-sm transition-colors hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+              className="w-full py-2.5 px-4 rounded-xl bg-accent text-white font-medium text-sm transition-all hover:bg-accent-hover hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? 'Creating Account…' : 'Create Account'}
             </button>

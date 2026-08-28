@@ -7,6 +7,7 @@ import sharesRouter from './shares';
 import auditRouter from './audit';
 import orgsRouter from './orgs';
 import searchRouter from './search';
+import trashRouter from './trash';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/shares', sharesRouter);
 router.use('/audit', auditRouter);
 router.use('/orgs', orgsRouter);
 router.use('/search', searchRouter);
+router.use('/trash', trashRouter);
 
 export default router;

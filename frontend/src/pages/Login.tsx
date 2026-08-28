@@ -3,9 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, Shield, Sun, Moon } from 'lucide-react';
+import { Lock, Mail, Shield } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { useTheme } from '../hooks/useTheme';
 import api from '../api/axios';
 import type { LoginFormData } from '../types';
 
@@ -17,7 +16,6 @@ const loginSchema = z.object({
 const Login = () => {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
-  const { isDark, toggleTheme } = useTheme();
   const [apiError, setApiError] = useState<string | null>(null);
 
   const {
@@ -43,20 +41,11 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-bg relative transition-colors">
-      <button
-        onClick={toggleTheme}
-        aria-label="Toggle theme"
-        title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        className="absolute top-5 right-5 w-9 h-9 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface border border-border transition-colors cursor-pointer shadow-sm"
-      >
-        {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-      </button>
-
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
       <div className="w-full max-w-md">
         {/* Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-accent text-bg mb-4 shadow-sm">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-accent text-white mb-4 shadow-xl shadow-indigo-500/25">
             <Shield className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold text-primary">SecureDoc</h1>
@@ -64,7 +53,7 @@ const Login = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-surface rounded-xl p-8 shadow-sm dark:shadow-2xl dark:shadow-black/50 border border-border transition-colors">
+        <div className="glass-panel rounded-2xl p-8">
           {/* API Error */}
           {apiError && (
             <div className="mb-5 px-4 py-3 rounded-lg bg-danger/10 border border-danger/20 text-danger text-sm">
@@ -84,7 +73,7 @@ const Login = () => {
                   id="login-email"
                   type="email"
                   {...register('email')}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg text-primary bg-bg border border-border placeholder-muted/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                  className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-primary placeholder-muted transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                   placeholder="you@example.com"
                 />
               </div>
@@ -104,7 +93,7 @@ const Login = () => {
                   id="login-password"
                   type="password"
                   {...register('password')}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg text-primary bg-bg border border-border placeholder-muted/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                  className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-primary placeholder-muted transition-all focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                   placeholder="Enter your password"
                 />
               </div>
@@ -117,7 +106,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 px-4 rounded-lg bg-accent text-bg font-medium text-sm transition-colors hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+              className="w-full py-2.5 px-4 rounded-xl bg-accent text-white font-medium text-sm transition-all hover:bg-accent-hover hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? 'Signing in…' : 'Sign In'}
             </button>

@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { FileText, Folder, Loader2, Shield, Sun, Moon } from 'lucide-react';
+import { FileText, Folder, Loader2, Shield } from 'lucide-react';
 import api from '../api/axios';
-import { useTheme } from '../hooks/useTheme';
 import { Share } from '../types';
 
 const ShareLink = () => {
   const { token } = useParams();
-  const { isDark, toggleTheme } = useTheme();
   const [share, setShare] = useState<Share | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,19 +28,10 @@ const ShareLink = () => {
   const Icon = share?.folder ? Folder : FileText;
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center px-4 relative transition-colors">
-      <button
-        onClick={toggleTheme}
-        aria-label="Toggle theme"
-        title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        className="absolute top-5 right-5 w-9 h-9 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface border border-border transition-colors cursor-pointer shadow-sm"
-      >
-        {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-      </button>
-
-      <div className="w-full max-w-md bg-surface border border-border rounded-lg shadow-sm dark:shadow-2xl dark:shadow-black/50 overflow-hidden transition-colors">
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
+      <div className="w-full max-w-md glass-panel rounded-2xl overflow-hidden">
         <div className="h-14 border-b border-border px-5 flex items-center gap-2.5">
-          <span className="w-8 h-8 rounded-md flex items-center justify-center bg-accent text-bg shadow-sm">
+          <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent text-white shadow-lg shadow-indigo-500/20">
             <Shield className="w-4 h-4" />
           </span>
           <span className="text-base font-semibold text-primary">SecureDoc</span>
@@ -72,7 +61,7 @@ const ShareLink = () => {
               )}
               <Link
                 to="/login"
-                className="mt-6 inline-flex py-2.5 px-4 rounded-md bg-accent text-bg text-sm font-medium items-center hover:bg-accent-hover transition-colors shadow-sm"
+                className="mt-6 inline-flex py-2.5 px-4 rounded-xl bg-accent text-white text-sm font-medium items-center hover:bg-accent-hover hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
               >
                 Sign in to open
               </Link>

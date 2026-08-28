@@ -29,11 +29,11 @@ export default function AcceptInvite() {
   }, [token]);
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col transition-colors">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-surface border border-border rounded-lg shadow-xl dark:shadow-2xl dark:shadow-black/70 p-8 text-center transition-colors">
+        <div className="max-w-md w-full glass-panel rounded-2xl p-8 text-center">
           {status === 'loading' && (
             <div className="flex flex-col items-center">
               <Loader2 className="w-12 h-12 text-accent animate-spin mb-4" />
@@ -55,7 +55,7 @@ export default function AcceptInvite() {
                 onClick={() => {
                   window.location.href = '/dashboard';
                 }}
-                className="w-full py-2.5 px-4 rounded-md bg-accent text-bg text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent-hover hover:shadow-lg hover:shadow-indigo-500/25 transition-all cursor-pointer"
               >
                 Go to Dashboard
               </button>

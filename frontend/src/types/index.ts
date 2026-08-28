@@ -117,3 +117,14 @@ export interface AuditLog {
   createdAt: string;
   user?: ShareUser;
 }
+
+export interface TrashItem {
+  id: string;
+  name: string;
+  type: 'file' | 'folder';
+  size: number;
+  deletedAt: string;
+  mimeType?: string;
+  folderId?: string | null;
+  parentId?: string | null;
+}
