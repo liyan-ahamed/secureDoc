@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Copy,
   Download,
+  Eye,
   FileArchive,
   FileImage,
   FileText,
@@ -67,6 +68,7 @@ const Dashboard = () => {
   const [expiry, setExpiry] = useState('7');
   const [generatedLink, setGeneratedLink] = useState('');
   const [targetVersionFile, setTargetVersionFile] = useState<SecureFile | null>(null);
+  const [pdfPreview, setPdfPreview] = useState<{ name: string; url: string } | null>(null);
 
   const folderTree = useMemo(() => buildFolderTree(folders), [folders]);
   const isRootEmpty = !currentFolderId && subfolders.length === 0 && files.length === 0;
@@ -238,6 +240,28 @@ const Dashboard = () => {
     } catch {
       showToast('Download failed', 'error');
     }
+  };
+
+  const openPdfPreview = async (file: SecureFile) => {
+    if (file.mimeType !== 'application/pdf') return;
+
+    try {
+      const response = await api.get(`/files/${file.id}/download`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      setPdfPreview((current) => {
+        if (current) window.URL.revokeObjectURL(current.url);
+        return { name: file.originalName, url };
+      });
+    } catch {
+      showToast('Could not open PDF preview', 'error');
+    }
+  };
+
+  const closePdfPreview = () => {
+    setPdfPreview((current) => {
+      if (current) window.URL.revokeObjectURL(current.url);
+      return null;
+    });
   };
 
   const deleteFile = async (file: SecureFile) => {
@@ -502,6 +526,7 @@ const Dashboard = () => {
                 shares={sharedWithMe}
                 onOpenFolder={(folder) => loadContents(folder.id)}
                 onDownload={downloadFile}
+                onView={openPdfPreview}
                 onVersions={openVersions}
                 onUploadVersion={(file) => { setTargetVersionFile(file); versionUploadInputRef.current?.click(); }}
               />
@@ -538,6 +563,7 @@ const Dashboard = () => {
                     key={file.id}
                     file={file}
                     onDownload={() => downloadFile(file)}
+                    onView={() => openPdfPreview(file)}
                     onVersions={() => openVersions(file)}
                     onShare={() => openShareModal({ type: 'file', item: file })}
                     onMenu={(event) => handleOpenMenu(event, { type: 'file', id: file.id, x: 0, y: 0 })}
@@ -563,6 +589,7 @@ const Dashboard = () => {
             </>
           ) : activeFile ? (
             <>
+              {activeFile.mimeType === 'application/pdf' && <MenuButton onClick={() => { setMenu(null); void openPdfPreview(activeFile); }} icon={Eye} label="View PDF" />}
               <MenuButton onClick={() => downloadFile(activeFile)} icon={Download} label="Download" />
               <MenuButton onClick={() => openVersions(activeFile)} icon={History} label="Versions" />
               <MenuButton onClick={() => openShareModal({ type: 'file', item: activeFile })} icon={Share2} label="Share" />
@@ -751,6 +778,20 @@ const Dashboard = () => {
         </Modal>
       )}
 
+      {pdfPreview && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-6xl h-[90vh] rounded-2xl overflow-hidden bg-zinc-950 border border-white/15 shadow-2xl shadow-black/70 flex flex-col">
+            <div className="h-12 px-5 border-b border-border flex items-center justify-between shrink-0">
+              <h2 className="text-sm font-semibold text-primary truncate pr-4">{pdfPreview.name}</h2>
+              <button onClick={closePdfPreview} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 transition-colors cursor-pointer" title="Close preview">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <iframe title={`Preview of ${pdfPreview.name}`} src={pdfPreview.url} className="w-full flex-1 bg-white" />
+          </div>
+        </div>
+      )}
+
       {toast && (
         <div
           className={`fixed right-5 bottom-5 z-50 rounded-xl px-4 py-3 text-sm font-medium shadow-2xl shadow-black/30 flex items-center gap-2 backdrop-blur-xl transition-all ${
@@ -776,10 +817,11 @@ const TableHeader = () => (
   </div>
 );
 
-const SharedRows = ({ shares, onOpenFolder, onDownload, onVersions, onUploadVersion }: {
+const SharedRows = ({ shares, onOpenFolder, onDownload, onView, onVersions, onUploadVersion }: {
   shares: Share[];
   onOpenFolder: (folder: SecureFolder) => void;
   onDownload: (file: SecureFile) => void;
+  onView: (file: SecureFile) => void;
   onVersions: (file: SecureFile) => void;
   onUploadVersion: (file: SecureFile) => void;
 }) => {
@@ -796,7 +838,7 @@ const SharedRows = ({ shares, onOpenFolder, onDownload, onVersions, onUploadVers
   return (
     <div className="divide-y divide-border/60">
       {shares.map((share) => share.file ? (
-        <SharedFileRow key={share.id} share={share} file={share.file} onDownload={() => onDownload(share.file!)} onVersions={() => onVersions(share.file!)} onUploadVersion={() => onUploadVersion(share.file!)} />
+        <SharedFileRow key={share.id} share={share} file={share.file} onDownload={() => onDownload(share.file!)} onView={() => onView(share.file!)} onVersions={() => onVersions(share.file!)} onUploadVersion={() => onUploadVersion(share.file!)} />
       ) : share.folder ? (
         <SharedFolderRow key={share.id} share={share} folder={share.folder} onOpen={() => onOpenFolder(share.folder!)} />
       ) : null)}
@@ -881,7 +923,7 @@ const FolderRow = ({ folder, onOpen, onShare, onMenu }: { folder: SecureFolder; 
   </div>
 );
 
-const FileRow = ({ file, onDownload, onVersions, onShare, onMenu }: { file: SecureFile; onDownload: () => void; onVersions: () => void; onShare: () => void; onMenu: (event: MouseEvent) => void }) => {
+const FileRow = ({ file, onDownload, onView, onVersions, onShare, onMenu }: { file: SecureFile; onDownload: () => void; onView: () => void; onVersions: () => void; onShare: () => void; onMenu: (event: MouseEvent) => void }) => {
   const Icon = getFileIcon(file.mimeType);
   return (
     <div onContextMenu={onMenu} className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
@@ -896,6 +938,11 @@ const FileRow = ({ file, onDownload, onVersions, onShare, onMenu }: { file: Secu
       <span className="hidden sm:block text-sm text-muted">{formatSize(file.size)}</span>
       <span className="hidden lg:block text-sm text-muted">{relativeTime(file.updatedAt)}</span>
       <div className="justify-self-end flex items-center gap-1">
+        {file.mimeType === 'application/pdf' && (
+          <button onClick={onView} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer" title="View PDF">
+            <Eye className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={onDownload}
           className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
@@ -947,7 +994,7 @@ const SharedFolderRow = ({ share, folder, onOpen }: { share: Share; folder: Secu
   </div>
 );
 
-const SharedFileRow = ({ share, file, onDownload, onVersions, onUploadVersion }: { share: Share; file: SecureFile; onDownload: () => void; onVersions: () => void; onUploadVersion: () => void }) => {
+const SharedFileRow = ({ share, file, onDownload, onView, onVersions, onUploadVersion }: { share: Share; file: SecureFile; onDownload: () => void; onView: () => void; onVersions: () => void; onUploadVersion: () => void }) => {
   const Icon = getFileIcon(file.mimeType);
   return (
     <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
@@ -961,6 +1008,11 @@ const SharedFileRow = ({ share, file, onDownload, onVersions, onUploadVersion }:
       <span className="hidden sm:block text-sm text-muted">{formatSize(file.size)}</span>
       <span className="hidden lg:block text-sm text-muted">{relativeTime(file.updatedAt)}</span>
       <div className="justify-self-end flex items-center gap-1">
+        {file.mimeType === 'application/pdf' && (
+          <button onClick={onView} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer" title="View PDF">
+            <Eye className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={onDownload}
           className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"

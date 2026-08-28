@@ -7,6 +7,7 @@ import { canAccessFile, canAccessFolder, includeShareSummary } from '../services
 import { logAction } from '../services/auditLog';
 import { decryptFile, encryptFile } from '../services/encryption';
 import { readStoredFile, saveEncryptedFile } from '../services/storage';
+import { extractSearchableText } from '../services/textExtraction';
 
 const router = Router();
 const upload = multer({
@@ -98,6 +99,8 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
       return;
     }
 
+    // Use the original, in-memory data for indexing. The on-disk copy remains encrypted.
+    const extractedText = await extractSearchableText(uploadedFile.buffer, uploadedFile.mimetype);
     const { encryptedBuffer, ivHex, authTagHex } = encryptFile(uploadedFile.buffer);
     const storagePath = await saveEncryptedFile(crypto.randomUUID(), encryptedBuffer);
     const existingFile = targetFileId
@@ -144,6 +147,7 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
             storagePath,
             ivHex,
             authTagHex,
+            extractedText,
             currentVersion: { increment: 1 },
           },
         }),
@@ -174,6 +178,7 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
         storagePath,
         ivHex,
         authTagHex,
+        extractedText,
       },
     });
 

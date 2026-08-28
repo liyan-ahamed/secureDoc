@@ -107,6 +107,7 @@ model File {
   storagePath    String
   ivHex          String
   authTagHex     String
+  extractedText  String?
   isEncrypted    Boolean   @default(true)
   currentVersion Int       @default(1)
   createdAt      DateTime  @default(now())

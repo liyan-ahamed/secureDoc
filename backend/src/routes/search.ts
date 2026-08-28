@@ -6,6 +6,18 @@ import { authenticate } from '../middleware/auth';
 const router = Router();
 router.use(authenticate);
 
+const createContentSnippet = (text: string, query: string): string | null => {
+  const matchIndex = text.toLocaleLowerCase().indexOf(query.toLocaleLowerCase());
+  if (matchIndex === -1) return null;
+
+  const contextLength = 65;
+  const start = Math.max(0, matchIndex - contextLength);
+  const end = Math.min(text.length, matchIndex + query.length + contextLength);
+  const prefix = start > 0 ? '…' : '';
+  const suffix = end < text.length ? '…' : '';
+  return `${prefix}${text.slice(start, end).replace(/\s+/g, ' ').trim()}${suffix}`;
+};
+
 // GET /api/search?q=...&type=file|folder|all&orgId=...
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -48,9 +60,16 @@ router.get('/', async (req: Request, res: Response) => {
     if (type === 'all' || type === 'file') {
       files = await prisma.file.findMany({
         where: {
-          originalName: { contains: searchQuery, mode: 'insensitive' },
           deletedAt: null,
-          ...accessFilter,
+          AND: [
+            accessFilter,
+            {
+              OR: [
+                { originalName: { contains: searchQuery, mode: 'insensitive' } },
+                { extractedText: { contains: searchQuery, mode: 'insensitive' } },
+              ],
+            },
+          ],
         },
         include: {
           folder: { select: { id: true, name: true, parentId: true } },
@@ -76,11 +95,17 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     // Format results to include path and type indicator
-    const formattedFiles = files.map(file => ({
-      ...file,
-      type: 'file',
-      location: file.folder ? file.folder.name : 'My Drive'
-    }));
+    const formattedFiles = files.map(file => {
+      const snippet = file.extractedText ? createContentSnippet(file.extractedText, searchQuery) : null;
+
+      return {
+        ...file,
+        type: 'file',
+        location: file.folder ? file.folder.name : 'My Drive',
+        matchType: snippet ? 'content' : 'filename',
+        ...(snippet ? { snippet } : {}),
+      };
+    });
 
     const formattedFolders = folders.map(folder => ({
       ...folder,

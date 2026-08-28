@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, LogOut, Search, Loader2, File, Folder } from 'lucide-react';
+import { Shield, LogOut, Search, Loader2, File, Folder, FileText } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 
@@ -10,6 +10,15 @@ type SearchResult = {
   originalName?: string;
   type: 'file' | 'folder';
   location: string;
+  matchType?: 'filename' | 'content';
+  snippet?: string;
+};
+
+const highlightMatch = (text: string, query: string) => {
+  const matchIndex = text.toLocaleLowerCase().indexOf(query.toLocaleLowerCase());
+  if (matchIndex === -1) return text;
+
+  return <>{text.slice(0, matchIndex)}<mark className="bg-accent/30 text-primary rounded px-0.5">{text.slice(matchIndex, matchIndex + query.length)}</mark>{text.slice(matchIndex + query.length)}</>;
 };
 
 export default function Navbar() {
@@ -103,7 +112,7 @@ export default function Navbar() {
           </div>
 
           {isDropdownOpen && query.trim() !== '' && (
-            <div className="absolute top-full mt-2 w-full glass-panel rounded-xl z-50 max-h-96 overflow-y-auto">
+            <div className="absolute top-full mt-2 w-full rounded-xl z-50 max-h-96 overflow-y-auto bg-zinc-950 border border-white/15 shadow-2xl shadow-black/60">
               {!isSearching && results.length === 0 ? (
                 <div className="p-4 text-sm text-muted text-center">No results found for "{query}"</div>
               ) : (
@@ -123,6 +132,17 @@ export default function Navbar() {
                         <p className="text-sm font-medium text-primary truncate">
                           {result.type === 'folder' ? result.name : result.originalName}
                         </p>
+                        {result.type === 'file' && (
+                          <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted">
+                            <FileText className="w-3 h-3 shrink-0" />
+                            {result.matchType === 'content' ? 'Content match' : 'Filename match'}
+                          </p>
+                        )}
+                        {result.snippet && (
+                          <p className="mt-1 text-xs text-muted leading-5 line-clamp-2">
+                            {highlightMatch(result.snippet, query)}
+                          </p>
+                        )}
                         <p className="text-xs text-muted truncate">in {result.location}</p>
                       </div>
                     </button>
