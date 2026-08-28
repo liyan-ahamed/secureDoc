@@ -332,6 +332,16 @@ const Dashboard = () => {
     }
   };
 
+  const updateSharePermission = async (shareId: string, permission: SharePermission) => {
+    try {
+      await api.patch(`/shares/${shareId}`, { permission });
+      showToast('Share permission updated');
+      await Promise.all([loadMyShares(), loadSharedWithMe(), loadContents(currentFolderId)]);
+    } catch {
+      showToast('Could not update share permission', 'error');
+    }
+  };
+
   const copyGeneratedLink = async () => {
     if (!generatedLink) return;
     await navigator.clipboard?.writeText(generatedLink);
@@ -484,11 +494,21 @@ const Dashboard = () => {
             <div className="divide-y divide-border">
               {targetShares.length === 0 ? <p className="text-sm text-muted py-2">No active shares</p> : targetShares.map((share) => (
                 <div key={share.id} className="py-2 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm text-primary truncate">{share.sharedWith?.email || 'Link share'}</p>
-                    <p className="text-xs text-muted">{share.permission}{share.expiresAt ? ` | expires ${formatDate(share.expiresAt)}` : ''}</p>
+                    {share.expiresAt && <p className="text-xs text-muted">expires {formatDate(share.expiresAt)}</p>}
                   </div>
-                  <button onClick={() => revokeShare(share)} className="py-2 px-3 rounded-md border border-border text-sm text-danger cursor-pointer">Revoke</button>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={share.permission}
+                      onChange={(e) => updateSharePermission(share.id, e.target.value as SharePermission)}
+                      className="h-9 px-2 rounded-md border border-border text-sm outline-none focus:border-accent bg-transparent cursor-pointer"
+                    >
+                      <option value="VIEW">View</option>
+                      <option value="EDIT">Edit</option>
+                    </select>
+                    <button onClick={() => revokeShare(share)} className="py-2 px-3 rounded-md border border-border text-sm text-danger cursor-pointer hover:bg-danger/10">Revoke</button>
+                  </div>
                 </div>
               ))}
             </div>

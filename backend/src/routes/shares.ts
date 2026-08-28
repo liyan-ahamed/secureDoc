@@ -268,6 +268,56 @@ router.get('/shared-with-me', async (req: Request, res: Response) => {
     });
   }
 });
+// PATCH /api/shares/:id
+router.patch('/:id', async (req: Request, res: Response) => {
+  try {
+    const shareId = getRouteParam(req.params.id);
+    const permission = req.body.permission;
+
+    if (!isPermission(permission)) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Permission must be VIEW or EDIT' },
+      });
+      return;
+    }
+
+    const share = await prisma.share.findFirst({
+      where: { id: shareId, ownerId: req.user!.userId, revokedAt: null },
+      include: shareInclude,
+    });
+
+    if (!share) {
+      res.status(404).json({
+        success: false,
+        error: { message: 'Share not found' },
+      });
+      return;
+    }
+
+    const updatedShare = await prisma.share.update({
+      where: { id: share.id },
+      data: { permission },
+      include: shareInclude,
+    });
+
+    await logAction(req.user!.userId, 'UPDATE_SHARE_PERMISSION', 'SHARE', share.id, {
+      fileId: share.fileId,
+      folderId: share.folderId,
+      sharedWithEmail: share.sharedWith?.email || null,
+      linkShare: Boolean(share.shareToken),
+      permission,
+    });
+
+    res.json({ success: true, data: { share: updatedShare } });
+  } catch (error) {
+    console.error('Update share permission error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'An unexpected error occurred' },
+    });
+  }
+});
 
 // DELETE /api/shares/:id
 router.delete('/:id', async (req: Request, res: Response) => {
