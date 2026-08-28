@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  INDIVIDUAL
+  ORGANIZATION
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum SharePermission {
+  VIEW
+  EDIT
+}
+
+model User {
+  id          String      @id @default(cuid())
+  email       String      @unique
+  name        String
+  password    String
+  accountType AccountType @default(INDIVIDUAL)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  orgMemberships OrgMember[]
+  folders        Folder[]
+  files          File[]
+  fileVersions   FileVersion[]
+  sharesOwned    Share[]       @relation("ShareOwner")
+  sharesReceived Share[]       @relation("ShareRecipient")
+  auditLogs      AuditLog[]
+
+  @@map("users")
+}
+
+model Org {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members OrgMember[]
+  folders Folder[]
+  files   File[]
+  invites Invite[]
+
+  @@map("orgs")
+}
+
+model OrgMember {
+  id     String  @id @default(cuid())
+  userId String
+  orgId  String
+  role   OrgRole @default(MEMBER)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@map("org_members")
+}
+
+model Folder {
+  id        String    @id @default(uuid())
+  name      String
+  ownerId   String
+  orgId     String?
+  parentId  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  owner    User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  org      Org?     @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  parent   Folder?  @relation("FolderChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children Folder[] @relation("FolderChildren")
+  files    File[]
+  shares   Share[]
+
+  @@index([ownerId, parentId, deletedAt])
+  @@index([orgId])
+  @@map("folders")
+}
+
+model File {
+  id             String    @id @default(uuid())
+  name           String
+  originalName   String
+  mimeType       String
+  size           Int
+  ownerId        String
+  orgId          String?
+  folderId       String?
+  storagePath    String
+  ivHex          String
+  authTagHex     String
+  isEncrypted    Boolean   @default(true)
+  currentVersion Int       @default(1)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  owner    User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  org      Org?          @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  folder   Folder?       @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  versions FileVersion[]
+  shares   Share[]
+
+  @@index([ownerId, folderId, deletedAt])
+  @@index([orgId])
+  @@map("files")
+}
+
+model FileVersion {
+  id            String   @id @default(uuid())
+  fileId        String
+  versionNumber Int
+  storagePath   String
+  ivHex         String
+  authTagHex    String
+  size          Int
+  uploadedById  String
+  createdAt     DateTime @default(now())
+
+  file       File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, versionNumber])
+  @@index([uploadedById])
+  @@map("file_versions")
+}
+
+model Share {
+  id           String          @id @default(uuid())
+  fileId       String?
+  folderId     String?
+  ownerId      String
+  sharedWithId String?
+  permission   SharePermission
+  shareToken   String?         @unique
+  expiresAt    DateTime?
+  createdAt    DateTime        @default(now())
+  revokedAt    DateTime?
+
+  file       File?   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  folder     Folder? @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  owner      User    @relation("ShareOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  sharedWith User?   @relation("ShareRecipient", fields: [sharedWithId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, revokedAt])
+  @@index([sharedWithId, revokedAt])
+  @@index([fileId, revokedAt])
+  @@index([folderId, revokedAt])
+  @@map("shares")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, action, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Invite {
+  id         String   @id @default(cuid())
+  orgId      String
+  email      String
+  role       OrgRole  @default(MEMBER)
+  token      String   @unique
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  acceptedAt DateTime?
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, email])
+  @@map("invites")
+}
