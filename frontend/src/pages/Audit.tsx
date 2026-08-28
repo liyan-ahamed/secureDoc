@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Activity, ArrowLeft, Loader2, LogOut, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Activity, ArrowLeft, Loader2 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 import { AuditLog } from '../types';
+import Navbar from '../components/Navbar';
 
 const actions = ['ALL', 'UPLOAD', 'DOWNLOAD', 'SHARE', 'REVOKE_SHARE', 'DELETE', 'RESTORE', 'LOGIN', 'SIGNUP'];
 
 const Audit = () => {
-  const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [action, setAction] = useState('ALL');
   const [scope, setScope] = useState<'mine' | 'org'>('mine');
@@ -38,66 +38,78 @@ const Audit = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
-
   return (
-    <div className="min-h-screen bg-bg">
-      <nav className="h-14 bg-surface border-b border-border px-5 flex items-center justify-between">
-        <Link to="/dashboard" className="flex items-center gap-2.5">
-          <span className="w-8 h-8 rounded-md flex items-center justify-center bg-accent"><Shield className="w-4 h-4 text-white" /></span>
-          <span className="text-base font-semibold text-primary">SecureDoc</span>
-        </Link>
-        <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium text-primary">{user?.name || 'User'}</p>
-            <p className="text-xs text-muted">{user?.email}</p>
-          </div>
-          <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted border border-border hover:text-primary hover:border-muted cursor-pointer"><LogOut className="w-3.5 h-3.5" />Logout</button>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-bg transition-colors">
+      <Navbar />
 
       <main className="w-full max-w-7xl mx-auto px-6 py-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
           <div>
-            <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary mb-2"><ArrowLeft className="w-4 h-4" />Dashboard</Link>
-            <h1 className="text-xl font-semibold text-primary flex items-center gap-2"><Activity className="w-5 h-5 text-accent" />Audit Log</h1>
+            <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary transition-colors mb-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Link>
+            <h1 className="text-xl font-semibold text-primary flex items-center gap-2">
+              <Activity className="w-5 h-5 text-accent" />
+              Audit Log
+            </h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {canViewOrg && (
-              <select value={scope} onChange={(event) => setScope(event.target.value as 'mine' | 'org')} className="py-2 px-3 rounded-md border border-border bg-surface text-sm text-primary">
+              <select
+                value={scope}
+                onChange={(event) => setScope(event.target.value as 'mine' | 'org')}
+                className="py-2 px-3 rounded-md border border-border bg-surface text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent cursor-pointer transition-colors"
+              >
                 <option value="mine">My activity</option>
                 <option value="org">Org activity</option>
               </select>
             )}
-            <select value={action} onChange={(event) => setAction(event.target.value)} className="py-2 px-3 rounded-md border border-border bg-surface text-sm text-primary">
-              {filteredActions.map((item) => <option key={item} value={item}>{item === 'ALL' ? 'All actions' : item}</option>)}
+            <select
+              value={action}
+              onChange={(event) => setAction(event.target.value)}
+              className="py-2 px-3 rounded-md border border-border bg-surface text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent cursor-pointer transition-colors"
+            >
+              {filteredActions.map((item) => (
+                <option key={item} value={item}>
+                  {item === 'ALL' ? 'All actions' : item}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
-        <section className="bg-surface border border-border rounded-lg overflow-hidden">
-          <div className="grid grid-cols-[160px_130px_1fr] gap-3 px-4 py-3 bg-bg text-xs font-medium text-muted uppercase items-center">
+        <section className="bg-surface border border-border rounded-lg shadow-sm dark:shadow-xl dark:shadow-black/40 overflow-hidden transition-colors">
+          <div className="grid grid-cols-[160px_130px_1fr] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
             <span>Timestamp</span>
             <span>Action</span>
             <span>Details</span>
           </div>
           {loading ? (
-            <div className="h-48 flex items-center justify-center text-muted text-sm gap-2"><Loader2 className="w-4 h-4 animate-spin" />Loading activity</div>
+            <div className="h-48 flex items-center justify-center text-muted text-sm gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-accent" />
+              Loading activity
+            </div>
           ) : logs.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-muted text-sm">No audit events found</div>
+            <div className="h-48 flex items-center justify-center text-muted text-sm">
+              No audit events found
+            </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border/60">
               {logs.map((log) => (
-                <div key={log.id} className="grid grid-cols-1 sm:grid-cols-[160px_130px_1fr] gap-2 sm:gap-3 items-center px-4 py-3">
+                <div key={log.id} className="grid grid-cols-1 sm:grid-cols-[160px_130px_1fr] gap-2 sm:gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
                   <span className="text-sm text-muted">{formatDate(log.createdAt)}</span>
-                  <span className="text-sm font-medium text-primary">{log.action}</span>
+                  <span className="text-sm font-medium text-primary">
+                    <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-accent/10 text-accent border border-accent/20">
+                      {log.action}
+                    </span>
+                  </span>
                   <div className="min-w-0">
-                    <p className="text-sm text-primary">{log.targetType} | {targetName(log)}</p>
-                    <p className="text-xs text-muted truncate">{metadataSummary(log.metadata)}</p>
-                    {scope === 'org' && <p className="text-xs text-muted">{log.user?.email}</p>}
+                    <p className="text-sm text-primary font-medium">
+                      {log.targetType} <span className="text-muted font-normal">|</span> {targetName(log)}
+                    </p>
+                    <p className="text-xs text-muted truncate mt-0.5">{metadataSummary(log.metadata)}</p>
+                    {scope === 'org' && <p className="text-xs text-muted mt-0.5">By: {log.user?.email}</p>}
                   </div>
                 </div>
               ))}

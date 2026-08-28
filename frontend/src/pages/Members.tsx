@@ -118,19 +118,28 @@ export default function Members() {
   };
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg transition-colors">
       <Navbar />
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-border bg-surface p-4 hidden md:block">
-          <Link to="/dashboard" className="w-full h-9 px-2 rounded-md flex items-center gap-2 text-sm text-left text-muted hover:bg-bg">
-            <Folder className="w-4 h-4 text-accent" />My Drive
+        <aside className="w-72 shrink-0 border-r border-border bg-surface p-4 hidden md:block transition-colors">
+          <Link
+            to="/dashboard"
+            className="w-full h-9 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+          >
+            <Folder className="w-4 h-4 text-accent" />
+            My Drive
           </Link>
-          <Link to="/dashboard?view=shared" className="w-full h-9 mt-1 px-2 rounded-md flex items-center gap-2 text-sm text-left text-muted hover:bg-bg">
-            <Users className="w-4 h-4 text-accent" />Shared with me
+          <Link
+            to="/dashboard?view=shared"
+            className="w-full h-9 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+          >
+            <Users className="w-4 h-4 text-accent" />
+            Shared with me
           </Link>
-          <div className="w-full h-9 mt-1 px-2 rounded-md flex items-center gap-2 text-sm text-left bg-bg text-primary">
-            <Users className="w-4 h-4 text-accent" />Members
+          <div className="w-full h-9 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left bg-accent/10 text-accent font-medium transition-colors">
+            <Users className="w-4 h-4 text-accent" />
+            Members
           </div>
         </aside>
 
@@ -143,7 +152,7 @@ export default function Members() {
             {canManage && (
               <button
                 onClick={() => { setInviteEmail(''); setInviteLink(''); setInviteModalOpen(true); }}
-                className="py-2 px-4 rounded-md bg-accent text-white text-sm font-medium flex items-center gap-2 hover:bg-accent-hover"
+                className="py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium flex items-center gap-2 hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
               >
                 <UserPlus className="w-4 h-4" />
                 Invite Member
@@ -151,8 +160,8 @@ export default function Members() {
             )}
           </div>
 
-          <section className="bg-surface border border-border rounded-lg overflow-hidden">
-            <div className="grid grid-cols-[1fr_120px_150px_100px] gap-3 px-4 py-3 bg-bg text-xs font-medium text-muted uppercase items-center">
+          <section className="bg-surface border border-border rounded-lg shadow-sm dark:shadow-xl dark:shadow-black/40 overflow-hidden transition-colors">
+            <div className="grid grid-cols-[1fr_120px_150px_100px] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
               <span>Member</span>
               <span>Role</span>
               <span>Joined</span>
@@ -161,12 +170,13 @@ export default function Members() {
 
             {loading ? (
               <div className="h-52 flex items-center justify-center text-muted text-sm gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />Loading members
+                <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                Loading members
               </div>
             ) : (
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border/60">
                 {members.map((member) => (
-                  <div key={member.id} className="grid grid-cols-[1fr_120px_150px_100px] gap-3 items-center px-4 py-3 hover:bg-bg">
+                  <div key={member.id} className="grid grid-cols-[1fr_120px_150px_100px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-primary truncate">{member.user.name}</p>
                       <p className="text-xs text-muted truncate">{member.user.email}</p>
@@ -176,7 +186,7 @@ export default function Members() {
                       <select 
                         value={member.role}
                         onChange={(e) => handleRoleChange(member.userId, e.target.value)}
-                        className="h-8 px-2 rounded-md border border-border text-sm outline-none bg-transparent focus:border-accent"
+                        className="h-8 px-2 rounded-md border border-border text-xs outline-none bg-bg text-primary focus:border-accent cursor-pointer"
                       >
                         <option value="ADMIN">Admin</option>
                         <option value="MEMBER">Member</option>
@@ -193,8 +203,8 @@ export default function Members() {
                       {canManage && member.role !== 'OWNER' && (member.role !== 'ADMIN' || currentUserRole === 'OWNER') && (
                         <button
                           onClick={() => handleRemove(member.userId, member.user.name)}
-                          className="w-8 h-8 rounded-md flex items-center justify-center text-danger hover:bg-surface"
-                          title="Remove"
+                          className="w-8 h-8 rounded-md flex items-center justify-center text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                          title="Remove member"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -204,16 +214,16 @@ export default function Members() {
                 ))}
 
                 {invites.map((invite) => (
-                  <div key={invite.id} className="grid grid-cols-[1fr_120px_150px_100px] gap-3 items-center px-4 py-3 hover:bg-bg opacity-70">
+                  <div key={invite.id} className="grid grid-cols-[1fr_120px_150px_100px] gap-3 items-center px-4 py-3 hover:bg-bg opacity-75 transition-colors">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-primary truncate">{invite.email}</p>
-                      <p className="text-xs text-muted truncate">Pending Invite</p>
+                      <span className="inline-block mt-0.5 text-[11px] font-medium px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
+                        Pending Invite
+                      </span>
                     </div>
                     <span className="text-sm text-muted">{invite.role}</span>
                     <span className="text-sm text-muted">-</span>
-                    <div className="justify-self-end">
-                      {/* Optional: could add cancel invite action here */}
-                    </div>
+                    <div className="justify-self-end"></div>
                   </div>
                 ))}
               </div>
@@ -227,22 +237,22 @@ export default function Members() {
           {!inviteLink ? (
             <form onSubmit={handleInvite} className="space-y-4">
               <div>
-                <label className="block text-sm text-muted mb-1">Email Address</label>
+                <label className="block text-sm font-medium text-primary mb-1.5">Email Address</label>
                 <input
                   type="email"
                   required
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent bg-transparent text-primary"
+                  className="w-full h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-bg text-primary placeholder-muted"
                   placeholder="colleague@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm text-muted mb-1">Role</label>
+                <label className="block text-sm font-medium text-primary mb-1.5">Role</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as 'ADMIN' | 'MEMBER')}
-                  className="w-full h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent bg-transparent text-primary"
+                  className="w-full h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-bg text-primary"
                 >
                   <option value="MEMBER">Member</option>
                   <option value="ADMIN">Admin</option>
@@ -252,14 +262,14 @@ export default function Members() {
                 <button
                   type="button"
                   onClick={() => setInviteModalOpen(false)}
-                  className="py-2 px-4 rounded-md border border-border text-sm text-muted"
+                  className="py-2 px-4 rounded-md border border-border text-sm text-muted hover:text-primary hover:bg-bg transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || !inviteEmail.trim()}
-                  className="py-2 px-4 rounded-md bg-accent text-white text-sm font-medium disabled:opacity-70 flex items-center gap-2"
+                  className="py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium disabled:opacity-70 flex items-center gap-2 hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
                 >
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   Send Invite
@@ -273,11 +283,11 @@ export default function Members() {
                 <input
                   readOnly
                   value={inviteLink}
-                  className="flex-1 h-9 px-3 rounded-md border border-border text-sm text-muted bg-transparent"
+                  className="flex-1 h-9 px-3 rounded-md border border-border text-sm text-muted bg-bg"
                 />
                 <button
                   onClick={copyInviteLink}
-                  className="py-2 px-4 rounded-md border border-border text-sm text-primary flex items-center gap-2 hover:bg-bg"
+                  className="py-1.5 px-3 rounded-md border border-border text-sm text-primary flex items-center gap-2 hover:bg-bg transition-colors cursor-pointer"
                 >
                   <Copy className="w-4 h-4" />Copy
                 </button>
@@ -285,7 +295,7 @@ export default function Members() {
               <div className="flex justify-end pt-2">
                 <button
                   onClick={() => { setInviteModalOpen(false); loadMembers(); }}
-                  className="py-2 px-4 rounded-md bg-accent text-white text-sm font-medium"
+                  className="py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
                 >
                   Done
                 </button>
@@ -299,11 +309,14 @@ export default function Members() {
 }
 
 const Modal = ({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void; }) => (
-  <div className="fixed inset-0 z-40 bg-primary/30 flex items-center justify-center px-4">
-    <div className="bg-surface rounded-lg border border-border shadow-xl w-full max-w-md">
-      <div className="h-12 px-4 border-b border-border flex items-center justify-between">
+  <div className="fixed inset-0 z-40 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center px-4 transition-all">
+    <div className="bg-surface rounded-lg border border-border shadow-xl dark:shadow-2xl dark:shadow-black/70 w-full max-w-md overflow-hidden transition-colors">
+      <div className="h-12 px-5 border-b border-border flex items-center justify-between">
         <h2 className="text-sm font-semibold text-primary truncate pr-4">{title}</h2>
-        <button onClick={onClose} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-bg">
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-bg transition-colors cursor-pointer"
+        >
           <X className="w-4 h-4" />
         </button>
       </div>

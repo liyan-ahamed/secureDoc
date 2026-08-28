@@ -20,6 +20,7 @@ import {
   Upload,
   Users,
   X,
+  Check,
 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
@@ -355,26 +356,69 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg transition-colors">
       <Navbar />
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-border bg-surface p-4 hidden md:block">
-          <button onClick={() => { setFolderName(''); setFolderModal({ mode: 'create' }); }} className="w-full py-2 px-4 mb-4 rounded-md bg-accent text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-accent-hover cursor-pointer"><FolderPlus className="w-4 h-4" />New Folder</button>
-          <button onClick={() => loadContents(null)} className={`w-full py-2 px-3 rounded-md flex items-center gap-2 text-sm text-left cursor-pointer ${viewMode === 'drive' && !currentFolderId ? 'bg-bg text-primary' : 'text-muted hover:bg-bg'}`}><Folder className="w-4 h-4 text-accent" />My Drive</button>
-          <button onClick={openSharedView} className={`w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2 text-sm text-left cursor-pointer ${viewMode === 'shared' ? 'bg-bg text-primary' : 'text-muted hover:bg-bg'}`}><Users className="w-4 h-4 text-accent" />Shared with me</button>
+        <aside className="w-72 shrink-0 border-r border-border bg-surface p-4 hidden md:block transition-colors">
+          <button
+            onClick={() => { setFolderName(''); setFolderModal({ mode: 'create' }); }}
+            className="w-full py-2 px-4 mb-4 rounded-md bg-accent text-bg text-sm font-medium flex items-center justify-center gap-2 hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
+          >
+            <FolderPlus className="w-4 h-4" />
+            New Folder
+          </button>
+          
+          <button
+            onClick={() => loadContents(null)}
+            className={`w-full py-2 px-3 rounded-md flex items-center gap-2.5 text-sm text-left cursor-pointer transition-colors ${
+              viewMode === 'drive' && !currentFolderId
+                ? 'bg-accent/10 text-accent font-medium'
+                : 'text-muted hover:text-primary hover:bg-bg'
+            }`}
+          >
+            <Folder className="w-4 h-4 text-accent" />
+            My Drive
+          </button>
+
+          <button
+            onClick={openSharedView}
+            className={`w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left cursor-pointer transition-colors ${
+              viewMode === 'shared'
+                ? 'bg-accent/10 text-accent font-medium'
+                : 'text-muted hover:text-primary hover:bg-bg'
+            }`}
+          >
+            <Users className="w-4 h-4 text-accent" />
+            Shared with me
+          </button>
+
           {user?.orgMemberships && user.orgMemberships.length > 0 && (
-            <Link to="/org/members" className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2 text-sm text-left text-muted hover:bg-bg">
-              <Users className="w-4 h-4 text-accent" />Members
+            <Link
+              to="/org/members"
+              className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+            >
+              <Users className="w-4 h-4 text-accent" />
+              Members
             </Link>
           )}
-          <div className="mt-3 space-y-0.5">
+
+          <div className="mt-4 pt-3 border-t border-border space-y-0.5">
+            <p className="px-2 pb-1.5 text-xs font-semibold text-muted uppercase tracking-wider">Folders</p>
             {folderTree.map((folder) => (
-              <FolderTreeItem key={folder.id} folder={folder} level={0} expanded={expanded} currentFolderId={currentFolderId} onToggle={(id) => setExpanded((prev) => {
-                const next = new Set(prev);
-                next.has(id) ? next.delete(id) : next.add(id);
-                return next;
-              })} onSelect={(id) => loadContents(id)} />
+              <FolderTreeItem
+                key={folder.id}
+                folder={folder}
+                level={0}
+                expanded={expanded}
+                currentFolderId={currentFolderId}
+                onToggle={(id) => setExpanded((prev) => {
+                  const next = new Set(prev);
+                  next.has(id) ? next.delete(id) : next.add(id);
+                  return next;
+                })}
+                onSelect={(id) => loadContents(id)}
+              />
             ))}
           </div>
         </aside>
@@ -383,42 +427,105 @@ const Dashboard = () => {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
             <div>
               <div className="flex items-center gap-1.5 text-sm text-muted flex-wrap">
-                {viewMode === 'shared' ? <span>Shared with me</span> : (
+                {viewMode === 'shared' ? (
+                  <span>Shared with me</span>
+                ) : (
                   <>
-                    <button onClick={() => loadContents(null)} className="hover:text-primary cursor-pointer">My Drive</button>
-                    {breadcrumb.map((folder) => <span key={folder.id} className="flex items-center gap-1.5"><ChevronRight className="w-3.5 h-3.5" /><button onClick={() => loadContents(folder.id)} className="hover:text-primary cursor-pointer">{folder.name}</button></span>)}
+                    <button onClick={() => loadContents(null)} className="hover:text-primary transition-colors cursor-pointer">
+                      My Drive
+                    </button>
+                    {breadcrumb.map((folder) => (
+                      <span key={folder.id} className="flex items-center gap-1.5">
+                        <ChevronRight className="w-3.5 h-3.5" />
+                        <button onClick={() => loadContents(folder.id)} className="hover:text-primary transition-colors cursor-pointer">
+                          {folder.name}
+                        </button>
+                      </span>
+                    ))}
                   </>
                 )}
               </div>
-              <h1 className="text-xl font-semibold text-primary mt-1">{viewMode === 'shared' ? 'Shared with me' : breadcrumb[breadcrumb.length - 1]?.name || 'My Drive'}</h1>
+              <h1 className="text-xl font-semibold text-primary mt-1">
+                {viewMode === 'shared' ? 'Shared with me' : breadcrumb[breadcrumb.length - 1]?.name || 'My Drive'}
+              </h1>
             </div>
+
             {viewMode === 'drive' && (
               <div className="flex items-center gap-2">
-                <button onClick={() => { setFolderName(''); setFolderModal({ mode: 'create' }); }} className="md:hidden py-2 px-4 rounded-md border border-border text-sm text-primary flex items-center gap-2 cursor-pointer"><FolderPlus className="w-4 h-4" />New Folder</button>
-                <button onClick={() => uploadInputRef.current?.click()} disabled={uploading} className="py-2 px-4 rounded-md bg-accent text-white text-sm font-medium flex items-center gap-2 hover:bg-accent-hover disabled:opacity-70 cursor-pointer">{uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}Upload</button>
+                <button
+                  onClick={() => { setFolderName(''); setFolderModal({ mode: 'create' }); }}
+                  className="md:hidden py-2 px-4 rounded-md border border-border text-sm text-primary flex items-center gap-2 hover:bg-bg transition-colors cursor-pointer"
+                >
+                  <FolderPlus className="w-4 h-4" />
+                  New Folder
+                </button>
+                <button
+                  onClick={() => uploadInputRef.current?.click()}
+                  disabled={uploading}
+                  className="py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium flex items-center gap-2 hover:bg-accent-hover disabled:opacity-70 transition-colors cursor-pointer shadow-sm"
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  Upload
+                </button>
               </div>
             )}
             <input ref={uploadInputRef} type="file" className="hidden" onChange={handleUpload} />
             <input ref={versionUploadInputRef} type="file" className="hidden" onChange={handleVersionUpload} />
           </div>
 
-          <section className="bg-surface border border-border rounded-lg overflow-hidden">
+          <section className="bg-surface border border-border rounded-lg shadow-sm dark:shadow-xl dark:shadow-black/40 overflow-hidden transition-colors">
             <TableHeader />
             {loading ? (
-              <div className="h-52 flex items-center justify-center text-muted text-sm gap-2"><Loader2 className="w-4 h-4 animate-spin" />Loading documents</div>
+              <div className="h-52 flex items-center justify-center text-muted text-sm gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                Loading documents
+              </div>
             ) : viewMode === 'shared' ? (
-              <SharedRows shares={sharedWithMe} onOpenFolder={(folder) => loadContents(folder.id)} onDownload={downloadFile} onVersions={openVersions} onUploadVersion={(file) => { setTargetVersionFile(file); versionUploadInputRef.current?.click(); }} />
+              <SharedRows
+                shares={sharedWithMe}
+                onOpenFolder={(folder) => loadContents(folder.id)}
+                onDownload={downloadFile}
+                onVersions={openVersions}
+                onUploadVersion={(file) => { setTargetVersionFile(file); versionUploadInputRef.current?.click(); }}
+              />
             ) : isRootEmpty || isEmptyFolder ? (
               <div className="h-64 flex flex-col items-center justify-center text-center px-4">
                 <Folder className="w-10 h-10 text-accent mb-3" />
-                <h2 className="text-base font-semibold text-primary">{isRootEmpty ? 'Your secure drive is ready' : 'No files yet'}</h2>
-                <p className="text-sm text-muted mt-1 mb-4">{isRootEmpty ? 'Create a folder or upload your first encrypted file.' : 'Upload a file to start this folder.'}</p>
-                <button onClick={() => uploadInputRef.current?.click()} className="py-2 px-4 rounded-md bg-accent text-white text-sm font-medium flex items-center gap-2 hover:bg-accent-hover cursor-pointer"><Upload className="w-4 h-4" />Upload File</button>
+                <h2 className="text-base font-semibold text-primary">
+                  {isRootEmpty ? 'Your secure drive is ready' : 'No files yet'}
+                </h2>
+                <p className="text-sm text-muted mt-1 mb-4">
+                  {isRootEmpty ? 'Create a folder or upload your first encrypted file.' : 'Upload a file to start this folder.'}
+                </p>
+                <button
+                  onClick={() => uploadInputRef.current?.click()}
+                  className="py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium flex items-center gap-2 hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload File
+                </button>
               </div>
             ) : (
-              <div className="divide-y divide-border">
-                {subfolders.map((folder) => <FolderRow key={folder.id} folder={folder} onOpen={() => loadContents(folder.id)} onShare={() => openShareModal({ type: 'folder', item: folder })} onMenu={(event) => handleOpenMenu(event, { type: 'folder', id: folder.id, x: 0, y: 0 })} />)}
-                {files.map((file) => <FileRow key={file.id} file={file} onDownload={() => downloadFile(file)} onVersions={() => openVersions(file)} onShare={() => openShareModal({ type: 'file', item: file })} onMenu={(event) => handleOpenMenu(event, { type: 'file', id: file.id, x: 0, y: 0 })} />)}
+              <div className="divide-y divide-border/60">
+                {subfolders.map((folder) => (
+                  <FolderRow
+                    key={folder.id}
+                    folder={folder}
+                    onOpen={() => loadContents(folder.id)}
+                    onShare={() => openShareModal({ type: 'folder', item: folder })}
+                    onMenu={(event) => handleOpenMenu(event, { type: 'folder', id: folder.id, x: 0, y: 0 })}
+                  />
+                ))}
+                {files.map((file) => (
+                  <FileRow
+                    key={file.id}
+                    file={file}
+                    onDownload={() => downloadFile(file)}
+                    onVersions={() => openVersions(file)}
+                    onShare={() => openShareModal({ type: 'file', item: file })}
+                    onMenu={(event) => handleOpenMenu(event, { type: 'file', id: file.id, x: 0, y: 0 })}
+                  />
+                ))}
               </div>
             )}
           </section>
@@ -426,7 +533,11 @@ const Dashboard = () => {
       </div>
 
       {menu && (
-        <div className="fixed z-30 w-48 rounded-md border border-border bg-surface shadow-lg py-1" style={{ left: menu.x, top: menu.y }} onClick={(event) => event.stopPropagation()}>
+        <div
+          className="fixed z-30 w-48 rounded-md border border-border bg-surface shadow-xl dark:shadow-2xl dark:shadow-black/70 py-1 transition-colors"
+          style={{ left: menu.x, top: menu.y }}
+          onClick={(event) => event.stopPropagation()}
+        >
           {menu.type === 'folder' && activeFolder ? (
             <>
               <MenuButton onClick={() => openShareModal({ type: 'folder', item: activeFolder })} icon={Share2} label="Share" />
@@ -447,10 +558,27 @@ const Dashboard = () => {
       {folderModal && (
         <Modal onClose={() => setFolderModal(null)} title={folderModal.mode === 'create' ? 'New Folder' : 'Rename Folder'}>
           <form onSubmit={submitFolder} className="space-y-4">
-            <input autoFocus value={folderName} onChange={(event) => setFolderName(event.target.value)} className="w-full h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent" placeholder="Folder name" />
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setFolderModal(null)} className="py-2 px-4 rounded-md border border-border text-sm text-muted cursor-pointer">Cancel</button>
-              <button type="submit" className="py-2 px-4 rounded-md bg-accent text-white text-sm font-medium cursor-pointer">Save</button>
+            <input
+              autoFocus
+              value={folderName}
+              onChange={(event) => setFolderName(event.target.value)}
+              className="w-full h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-bg text-primary placeholder-muted"
+              placeholder="Folder name"
+            />
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setFolderModal(null)}
+                className="py-2 px-4 rounded-md border border-border text-sm text-muted hover:text-primary hover:bg-bg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
+              >
+                Save
+              </button>
             </div>
           </form>
         </Modal>
@@ -459,58 +587,102 @@ const Dashboard = () => {
       {shareTarget && (
         <Modal onClose={() => setShareTarget(null)} title={`Share ${shareTarget.type === 'file' ? shareTarget.item.originalName : shareTarget.item.name}`} wide>
           <form onSubmit={createShare} className="space-y-4">
-            <label className="flex items-center gap-2 text-sm text-primary">
-              <input type="checkbox" checked={linkShare} onChange={(event) => setLinkShare(event.target.checked)} />
-              Generate a link
+            <label className="flex items-center gap-2 text-sm text-primary cursor-pointer">
+              <input
+                type="checkbox"
+                checked={linkShare}
+                onChange={(event) => setLinkShare(event.target.checked)}
+                className="rounded border-border text-accent focus:ring-accent"
+              />
+              Generate a public link
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-3">
               {linkShare ? (
-                <select value={expiry} onChange={(event) => setExpiry(event.target.value)} className="h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent">
+                <select
+                  value={expiry}
+                  onChange={(event) => setExpiry(event.target.value)}
+                  className="h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-bg text-primary"
+                >
                   <option value="1">1 day</option>
                   <option value="7">7 days</option>
                   <option value="30">30 days</option>
                   <option value="never">Never</option>
                 </select>
               ) : (
-                <input value={shareEmail} onChange={(event) => setShareEmail(event.target.value)} className="h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent" placeholder="user@example.com" />
+                <input
+                  value={shareEmail}
+                  onChange={(event) => setShareEmail(event.target.value)}
+                  className="h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-bg text-primary placeholder-muted"
+                  placeholder="user@example.com"
+                />
               )}
-              <select value={sharePermission} onChange={(event) => setSharePermission(event.target.value as SharePermission)} className="h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent">
+              <select
+                value={sharePermission}
+                onChange={(event) => setSharePermission(event.target.value as SharePermission)}
+                className="h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-bg text-primary"
+              >
                 <option value="VIEW">View</option>
                 <option value="EDIT">Edit</option>
               </select>
             </div>
             <div className="flex justify-end">
-              <button type="submit" className="py-2 px-4 rounded-md bg-accent text-white text-sm font-medium cursor-pointer">{linkShare ? 'Generate Link' : 'Share'}</button>
+              <button
+                type="submit"
+                className="py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
+              >
+                {linkShare ? 'Generate Link' : 'Share'}
+              </button>
             </div>
           </form>
+
           {generatedLink && (
             <div className="mt-4 flex gap-2">
-              <input readOnly value={generatedLink} className="flex-1 py-2 px-3 rounded-md border border-border text-sm text-muted" />
-              <button onClick={copyGeneratedLink} className="py-2 px-4 rounded-md border border-border text-sm text-primary flex items-center gap-2 cursor-pointer"><Copy className="w-4 h-4" />Copy</button>
+              <input
+                readOnly
+                value={generatedLink}
+                className="flex-1 py-2 px-3 rounded-md border border-border text-sm text-muted bg-bg"
+              />
+              <button
+                onClick={copyGeneratedLink}
+                className="py-2 px-4 rounded-md border border-border text-sm text-primary flex items-center gap-2 hover:bg-bg transition-colors cursor-pointer"
+              >
+                <Copy className="w-4 h-4" />
+                Copy
+              </button>
             </div>
           )}
-          <div className="mt-5 border-t border-border pt-4">
-            <h3 className="text-sm font-semibold text-primary mb-2">Current Shares</h3>
-            <div className="divide-y divide-border">
-              {targetShares.length === 0 ? <p className="text-sm text-muted py-2">No active shares</p> : targetShares.map((share) => (
-                <div key={share.id} className="py-2 flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-primary truncate">{share.sharedWith?.email || 'Link share'}</p>
-                    {share.expiresAt && <p className="text-xs text-muted">expires {formatDate(share.expiresAt)}</p>}
+
+          <div className="mt-6 border-t border-border pt-4">
+            <h3 className="text-sm font-semibold text-primary mb-3">Current Shares</h3>
+            <div className="divide-y divide-border/60">
+              {targetShares.length === 0 ? (
+                <p className="text-sm text-muted py-2">No active shares</p>
+              ) : (
+                targetShares.map((share) => (
+                  <div key={share.id} className="py-2.5 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-primary font-medium truncate">{share.sharedWith?.email || 'Public link share'}</p>
+                      {share.expiresAt && <p className="text-xs text-muted">Expires {formatDate(share.expiresAt)}</p>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={share.permission}
+                        onChange={(e) => updateSharePermission(share.id, e.target.value as SharePermission)}
+                        className="h-8 px-2 rounded-md border border-border text-xs outline-none focus:border-accent bg-bg text-primary cursor-pointer"
+                      >
+                        <option value="VIEW">View</option>
+                        <option value="EDIT">Edit</option>
+                      </select>
+                      <button
+                        onClick={() => revokeShare(share)}
+                        className="py-1 px-2.5 rounded-md border border-danger/30 text-xs font-medium text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                      >
+                        Revoke
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={share.permission}
-                      onChange={(e) => updateSharePermission(share.id, e.target.value as SharePermission)}
-                      className="h-9 px-2 rounded-md border border-border text-sm outline-none focus:border-accent bg-transparent cursor-pointer"
-                    >
-                      <option value="VIEW">View</option>
-                      <option value="EDIT">Edit</option>
-                    </select>
-                    <button onClick={() => revokeShare(share)} className="py-2 px-3 rounded-md border border-border text-sm text-danger cursor-pointer hover:bg-danger/10">Revoke</button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </Modal>
@@ -518,16 +690,43 @@ const Dashboard = () => {
 
       {versionsFile && (
         <Modal onClose={() => setVersionsFile(null)} title="Version History" wide>
-          {versionsLoading ? <div className="h-32 flex items-center justify-center text-muted text-sm gap-2"><Loader2 className="w-4 h-4 animate-spin" />Loading versions</div> : (
-            <div className="divide-y divide-border">
+          {versionsLoading ? (
+            <div className="h-32 flex items-center justify-center text-muted text-sm gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-accent" />
+              Loading versions
+            </div>
+          ) : (
+            <div className="divide-y divide-border/60">
               {versions.map((version) => (
-                <div key={version.id} className="grid grid-cols-1 sm:grid-cols-[1fr_110px_152px] gap-3 items-center py-3">
+                <div key={version.id} className="grid grid-cols-1 sm:grid-cols-[1fr_110px_130px] gap-3 items-center py-3">
                   <div>
-                    <p className="text-sm font-medium text-primary">Version {version.versionNumber}{version.isCurrent && <span className="ml-2 text-xs text-success">Current</span>}</p>
-                    <p className="text-xs text-muted">{formatDate(version.createdAt)} | {formatSize(version.size)} | {version.uploadedBy?.name || 'Unknown'}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-primary">Version {version.versionNumber}</p>
+                      {version.isCurrent && (
+                        <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted mt-0.5">
+                      {formatDate(version.createdAt)} | {formatSize(version.size)} | {version.uploadedBy?.name || 'Unknown'}
+                    </p>
                   </div>
-                  <button onClick={() => downloadFile(versionsFile, version.id)} className="py-2 px-3 rounded-md border border-border text-sm text-primary flex items-center justify-center gap-1.5 cursor-pointer"><Download className="w-3.5 h-3.5" />Download</button>
-                  <button onClick={() => restoreVersion(version)} disabled={version.isCurrent} className="py-2 px-3 rounded-md bg-accent text-white text-sm flex items-center justify-center gap-1.5 disabled:bg-border disabled:text-muted cursor-pointer disabled:cursor-default"><RefreshCcw className="w-3.5 h-3.5" />Restore</button>
+                  <button
+                    onClick={() => downloadFile(versionsFile, version.id)}
+                    className="py-1.5 px-3 rounded-md border border-border text-xs font-medium text-primary flex items-center justify-center gap-1.5 hover:bg-bg transition-colors cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Download
+                  </button>
+                  <button
+                    onClick={() => restoreVersion(version)}
+                    disabled={version.isCurrent}
+                    className="py-1.5 px-3 rounded-md bg-accent text-bg text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-accent-hover disabled:opacity-40 disabled:hover:bg-accent cursor-pointer disabled:cursor-not-allowed transition-colors"
+                  >
+                    <RefreshCcw className="w-3.5 h-3.5" />
+                    Restore
+                  </button>
                 </div>
               ))}
             </div>
@@ -535,13 +734,24 @@ const Dashboard = () => {
         </Modal>
       )}
 
-      {toast && <div className={`fixed right-5 bottom-5 z-40 rounded-md px-4 py-3 text-sm text-white shadow-lg ${toast.type === 'success' ? 'bg-success' : 'bg-danger'}`}>{toast.message}</div>}
+      {toast && (
+        <div
+          className={`fixed right-5 bottom-5 z-50 rounded-lg px-4 py-3 text-sm font-medium shadow-lg dark:shadow-2xl flex items-center gap-2 backdrop-blur-md transition-all ${
+            toast.type === 'success'
+              ? 'bg-success/15 text-success border border-success/30'
+              : 'bg-danger/15 text-danger border border-danger/30'
+          }`}
+        >
+          {toast.type === 'success' ? <Check className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />}
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 };
 
 const TableHeader = () => (
-  <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 px-4 py-3 bg-bg text-xs font-medium text-muted uppercase items-center">
+  <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
     <span>Name</span>
     <span className="hidden sm:block">Size</span>
     <span className="hidden lg:block">Modified</span>
@@ -567,7 +777,7 @@ const SharedRows = ({ shares, onOpenFolder, onDownload, onVersions, onUploadVers
   }
 
   return (
-    <div className="divide-y divide-border">
+    <div className="divide-y divide-border/60">
       {shares.map((share) => share.file ? (
         <SharedFileRow key={share.id} share={share} file={share.file} onDownload={() => onDownload(share.file!)} onVersions={() => onVersions(share.file!)} onUploadVersion={() => onUploadVersion(share.file!)} />
       ) : share.folder ? (
@@ -587,35 +797,69 @@ const FolderTreeItem = ({ folder, level, expanded, currentFolderId, onToggle, on
 }) => {
   const isExpanded = expanded.has(folder.id);
   const hasChildren = folder.children.length > 0;
+  const isSelected = currentFolderId === folder.id;
 
   return (
     <div>
-      <div className={`flex items-center rounded-md ${currentFolderId === folder.id ? 'bg-bg' : 'hover:bg-bg'}`} style={{ paddingLeft: `${level * 14}px` }}>
-        <button onClick={() => hasChildren && onToggle(folder.id)} className="w-7 h-8 flex items-center justify-center text-muted cursor-pointer">
+      <div
+        className={`flex items-center rounded-md transition-colors ${
+          isSelected ? 'bg-accent/10 text-accent font-medium' : 'hover:bg-bg text-primary'
+        }`}
+        style={{ paddingLeft: `${level * 14}px` }}
+      >
+        <button
+          onClick={() => hasChildren && onToggle(folder.id)}
+          className="w-7 h-8 flex items-center justify-center text-muted hover:text-primary transition-colors cursor-pointer"
+        >
           {hasChildren ? isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" /> : null}
         </button>
-        <button onClick={() => onSelect(folder.id)} className="min-w-0 flex-1 h-8 flex items-center gap-2 text-sm text-primary cursor-pointer">
-          <Folder className="w-4 h-4 text-accent shrink-0" />
+        <button
+          onClick={() => onSelect(folder.id)}
+          className="min-w-0 flex-1 h-8 flex items-center gap-2 text-sm text-inherit cursor-pointer"
+        >
+          <Folder className={`w-4 h-4 shrink-0 ${isSelected ? 'text-accent' : 'text-accent'}`} />
           <span className="truncate">{folder.name}</span>
         </button>
       </div>
-      {isExpanded && folder.children.map((child) => <FolderTreeItem key={child.id} folder={child} level={level + 1} expanded={expanded} currentFolderId={currentFolderId} onToggle={onToggle} onSelect={onSelect} />)}
+      {isExpanded && folder.children.map((child) => (
+        <FolderTreeItem
+          key={child.id}
+          folder={child}
+          level={level + 1}
+          expanded={expanded}
+          currentFolderId={currentFolderId}
+          onToggle={onToggle}
+          onSelect={onSelect}
+        />
+      ))}
     </div>
   );
 };
 
 const FolderRow = ({ folder, onOpen, onShare, onMenu }: { folder: SecureFolder; onOpen: () => void; onShare: () => void; onMenu: (event: MouseEvent) => void }) => (
-  <div onContextMenu={onMenu} className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg">
-    <button onClick={onOpen} className="min-w-0 flex items-center gap-3 text-left cursor-pointer">
+  <div onContextMenu={onMenu} className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
+    <button onClick={onOpen} className="min-w-0 flex items-center gap-3 text-left cursor-pointer group">
       <Folder className="w-5 h-5 text-accent shrink-0" />
-      <span className="text-sm font-medium text-primary truncate">{folder.name}</span>
+      <span className="text-sm font-medium text-primary group-hover:text-accent transition-colors truncate">{folder.name}</span>
       {hasShares(folder) && <SharedBadge />}
     </button>
     <span className="hidden sm:block text-sm text-muted">Folder</span>
     <span className="hidden lg:block text-sm text-muted">{relativeTime(folder.updatedAt)}</span>
     <div className="justify-self-end flex items-center gap-1">
-      <button onClick={onShare} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-surface cursor-pointer" title="Share"><Share2 className="w-4 h-4" /></button>
-      <button onClick={onMenu} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-surface cursor-pointer" title="More"><MoreHorizontal className="w-4 h-4" /></button>
+      <button
+        onClick={onShare}
+        className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+        title="Share"
+      >
+        <Share2 className="w-4 h-4" />
+      </button>
+      <button
+        onClick={onMenu}
+        className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+        title="More"
+      >
+        <MoreHorizontal className="w-4 h-4" />
+      </button>
     </div>
   </div>
 );
@@ -623,7 +867,7 @@ const FolderRow = ({ folder, onOpen, onShare, onMenu }: { folder: SecureFolder; 
 const FileRow = ({ file, onDownload, onVersions, onShare, onMenu }: { file: SecureFile; onDownload: () => void; onVersions: () => void; onShare: () => void; onMenu: (event: MouseEvent) => void }) => {
   const Icon = getFileIcon(file.mimeType);
   return (
-    <div onContextMenu={onMenu} className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg">
+    <div onContextMenu={onMenu} className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
       <div className="min-w-0 flex items-center gap-3">
         <Icon className="w-5 h-5 text-muted shrink-0" />
         <div className="min-w-0">
@@ -635,34 +879,61 @@ const FileRow = ({ file, onDownload, onVersions, onShare, onMenu }: { file: Secu
       <span className="hidden sm:block text-sm text-muted">{formatSize(file.size)}</span>
       <span className="hidden lg:block text-sm text-muted">{relativeTime(file.updatedAt)}</span>
       <div className="justify-self-end flex items-center gap-1">
-        <button onClick={onDownload} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-surface cursor-pointer" title="Download"><Download className="w-4 h-4" /></button>
-        <button onClick={onVersions} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-surface cursor-pointer" title="Versions"><History className="w-4 h-4" /></button>
-        <button onClick={onShare} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-surface cursor-pointer" title="Share"><Share2 className="w-4 h-4" /></button>
-        <button onClick={onMenu} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-surface cursor-pointer" title="More"><MoreHorizontal className="w-4 h-4" /></button>
+        <button
+          onClick={onDownload}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          title="Download"
+        >
+          <Download className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onVersions}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          title="Versions"
+        >
+          <History className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onShare}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          title="Share"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onMenu}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          title="More"
+        >
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
 };
 
 const SharedFolderRow = ({ share, folder, onOpen }: { share: Share; folder: SecureFolder; onOpen: () => void }) => (
-  <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg">
-    <button onClick={onOpen} className="min-w-0 flex items-center gap-3 text-left cursor-pointer">
+  <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
+    <button onClick={onOpen} className="min-w-0 flex items-center gap-3 text-left cursor-pointer group">
       <Folder className="w-5 h-5 text-accent shrink-0" />
       <div className="min-w-0">
-        <p className="text-sm font-medium text-primary truncate">{folder.name}</p>
+        <p className="text-sm font-medium text-primary group-hover:text-accent transition-colors truncate">{folder.name}</p>
         <p className="text-xs text-muted">Owner: {share.owner?.name || share.owner?.email}</p>
       </div>
     </button>
     <span className="hidden sm:block text-sm text-muted">{share.permission}</span>
     <span className="hidden lg:block text-sm text-muted">{relativeTime(folder.updatedAt)}</span>
-    <span className="justify-self-end text-xs text-success flex items-center gap-1"><Share2 className="w-3.5 h-3.5" />Shared</span>
+    <span className="justify-self-end text-xs font-medium px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20 flex items-center gap-1">
+      <Share2 className="w-3 h-3" />
+      Shared
+    </span>
   </div>
 );
 
 const SharedFileRow = ({ share, file, onDownload, onVersions, onUploadVersion }: { share: Share; file: SecureFile; onDownload: () => void; onVersions: () => void; onUploadVersion: () => void }) => {
   const Icon = getFileIcon(file.mimeType);
   return (
-    <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg">
+    <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
       <div className="min-w-0 flex items-center gap-3">
         <Icon className="w-5 h-5 text-muted shrink-0" />
         <div className="min-w-0">
@@ -673,26 +944,64 @@ const SharedFileRow = ({ share, file, onDownload, onVersions, onUploadVersion }:
       <span className="hidden sm:block text-sm text-muted">{formatSize(file.size)}</span>
       <span className="hidden lg:block text-sm text-muted">{relativeTime(file.updatedAt)}</span>
       <div className="justify-self-end flex items-center gap-1">
-        <button onClick={onDownload} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-surface cursor-pointer" title="Download"><Download className="w-4 h-4" /></button>
-        <button onClick={onVersions} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-surface cursor-pointer" title="Versions"><History className="w-4 h-4" /></button>
-        {share.permission === 'EDIT' && <button onClick={onUploadVersion} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-surface cursor-pointer" title="Upload new version"><Upload className="w-4 h-4" /></button>}
+        <button
+          onClick={onDownload}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          title="Download"
+        >
+          <Download className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onVersions}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+          title="Versions"
+        >
+          <History className="w-4 h-4" />
+        </button>
+        {share.permission === 'EDIT' && (
+          <button
+            onClick={onUploadVersion}
+            className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-surface dark:hover:bg-zinc-800 border border-transparent hover:border-border transition-colors cursor-pointer"
+            title="Upload new version"
+          >
+            <Upload className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   );
 };
 
-const SharedBadge = () => <span className="inline-flex items-center gap-1 rounded-sm border border-border px-1.5 py-0.5 text-[11px] text-muted"><Share2 className="w-3 h-3" />Shared</span>;
+const SharedBadge = () => (
+  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium bg-accent/10 text-accent border border-accent/20">
+    <Share2 className="w-3 h-3" />
+    Shared
+  </span>
+);
 
 const MenuButton = ({ onClick, icon: Icon, label, danger = false }: { onClick: () => void; icon: LucideIcon; label: string; danger?: boolean }) => (
-  <button onClick={onClick} className={`w-full h-9 px-3 flex items-center gap-2 text-sm hover:bg-bg cursor-pointer ${danger ? 'text-danger' : 'text-primary'}`}><Icon className="w-4 h-4" />{label}</button>
+  <button
+    onClick={onClick}
+    className={`w-full h-9 px-3 flex items-center gap-2.5 text-sm hover:bg-bg transition-colors cursor-pointer ${
+      danger ? 'text-danger hover:bg-danger/10' : 'text-primary'
+    }`}
+  >
+    <Icon className="w-4 h-4" />
+    {label}
+  </button>
 );
 
 const Modal = ({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) => (
-  <div className="fixed inset-0 z-40 bg-primary/30 flex items-center justify-center px-4">
-    <div className={`bg-surface rounded-lg border border-border shadow-xl ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'}`}>
-      <div className="h-12 px-4 border-b border-border flex items-center justify-between">
+  <div className="fixed inset-0 z-40 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center px-4 transition-all">
+    <div className={`bg-surface rounded-lg border border-border shadow-xl dark:shadow-2xl dark:shadow-black/70 ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'} overflow-hidden transition-colors`}>
+      <div className="h-12 px-5 border-b border-border flex items-center justify-between">
         <h2 className="text-sm font-semibold text-primary truncate pr-4">{title}</h2>
-        <button onClick={onClose} className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:bg-bg cursor-pointer"><X className="w-4 h-4" /></button>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-muted hover:text-primary hover:bg-bg transition-colors cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
       <div className="p-6">{children}</div>
     </div>

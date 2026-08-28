@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Loader2, ShieldAlert, CheckCircle } from 'lucide-react';
+import { Loader2, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import api from '../api/axios';
 import Navbar from '../components/Navbar';
 import { useAuthStore } from '../store/authStore';
@@ -18,10 +18,6 @@ export default function AcceptInvite() {
     const acceptInvite = async () => {
       try {
         await api.post(`/orgs/invite/${token}/accept`);
-        
-        // Wait a brief moment before success state to ensure backend completes
-        // and user might need to re-fetch their me profile to update store in real app,
-        // but for now we'll just show success and let them go to dashboard
         setStatus('success');
       } catch (error: any) {
         setStatus('error');
@@ -33,11 +29,11 @@ export default function AcceptInvite() {
   }, [token]);
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div className="min-h-screen bg-bg flex flex-col transition-colors">
       <Navbar />
       
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-surface border border-border rounded-lg shadow-xl p-8 text-center">
+        <div className="max-w-md w-full bg-surface border border-border rounded-lg shadow-xl dark:shadow-2xl dark:shadow-black/70 p-8 text-center transition-colors">
           {status === 'loading' && (
             <div className="flex flex-col items-center">
               <Loader2 className="w-12 h-12 text-accent animate-spin mb-4" />
@@ -48,17 +44,18 @@ export default function AcceptInvite() {
 
           {status === 'success' && (
             <div className="flex flex-col items-center">
-              <CheckCircle className="w-12 h-12 text-success mb-4" />
+              <div className="w-14 h-14 rounded-full bg-success/10 text-success border border-success/20 flex items-center justify-center mb-4">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
               <h2 className="text-xl font-semibold text-primary">Successfully Joined!</h2>
               <p className="text-sm text-muted mt-2 mb-6">
                 You are now a member of the organization. You can access its files and manage members based on your role.
               </p>
               <button
                 onClick={() => {
-                  // Hard reload to fetch new auth profile and update user context
                   window.location.href = '/dashboard';
                 }}
-                className="w-full py-2 px-4 rounded-md bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
+                className="w-full py-2.5 px-4 rounded-md bg-accent text-bg text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm cursor-pointer"
               >
                 Go to Dashboard
               </button>
@@ -67,7 +64,9 @@ export default function AcceptInvite() {
 
           {status === 'error' && (
             <div className="flex flex-col items-center">
-              <ShieldAlert className="w-12 h-12 text-danger mb-4" />
+              <div className="w-14 h-14 rounded-full bg-danger/10 text-danger border border-danger/20 flex items-center justify-center mb-4">
+                <ShieldAlert className="w-8 h-8" />
+              </div>
               <h2 className="text-xl font-semibold text-primary">Invitation Error</h2>
               <p className="text-sm text-muted mt-2 mb-6">{errorMessage}</p>
               
@@ -84,7 +83,7 @@ export default function AcceptInvite() {
                       useAuthStore.getState().logout();
                       navigate('/login');
                     }}
-                    className="text-xs text-muted hover:text-primary transition-colors"
+                    className="text-xs text-muted hover:text-primary transition-colors cursor-pointer"
                   >
                     Logged in as the wrong user? Click here to logout.
                   </button>
