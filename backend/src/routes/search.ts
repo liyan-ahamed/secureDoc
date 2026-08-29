@@ -42,7 +42,6 @@ router.get('/', async (req: Request, res: Response) => {
     // Try to get from cache first
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
-      console.log('[Redis] Served Search from cache');
       res.json({
         success: true,
         data: { results: JSON.parse(cachedData) },
@@ -128,7 +127,6 @@ router.get('/', async (req: Request, res: Response) => {
 
     // Save to cache with 60s TTL
     await redis.setex(cacheKey, 60, JSON.stringify(results));
-    console.log('[Redis] Served Search from DB');
 
     res.json({
       success: true,

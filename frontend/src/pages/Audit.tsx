@@ -43,7 +43,7 @@ const Audit = () => {
       <Navbar />
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden md:block">
+        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden lg:block">
           <Link
             to="/dashboard"
             className="w-full py-2 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
@@ -78,7 +78,7 @@ const Audit = () => {
           </Link>
         </aside>
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
             <div>
               <h1 className="text-xl font-semibold text-primary flex items-center gap-2">
@@ -112,7 +112,7 @@ const Audit = () => {
         </div>
 
         <section className="glass-panel rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-[160px_130px_1fr] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
+          <div className="hidden sm:grid sm:grid-cols-[160px_130px_1fr] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
             <span>Timestamp</span>
             <span>Action</span>
             <span>Details</span>

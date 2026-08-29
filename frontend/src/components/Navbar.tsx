@@ -1,173 +1,30 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, LogOut, Search, Loader2, File, Folder, FileText } from 'lucide-react';
+import { Shield, LogOut, Search, Loader2, File, Folder, FileText, Menu, X, Users, ShieldCheck, Trash2, ClipboardCheck } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 
-type SearchResult = {
-  id: string;
-  name?: string;
-  originalName?: string;
-  type: 'file' | 'folder';
-  location: string;
-  matchType?: 'filename' | 'content';
-  snippet?: string;
-};
+type SearchResult = { id: string; name?: string; originalName?: string; type: 'file' | 'folder'; location: string; matchType?: 'filename' | 'content'; snippet?: string };
 
 const highlightMatch = (text: string, query: string) => {
-  const matchIndex = text.toLocaleLowerCase().indexOf(query.toLocaleLowerCase());
-  if (matchIndex === -1) return text;
-
-  return <>{text.slice(0, matchIndex)}<mark className="bg-accent/30 text-primary rounded px-0.5">{text.slice(matchIndex, matchIndex + query.length)}</mark>{text.slice(matchIndex + query.length)}</>;
+  const index = text.toLocaleLowerCase().indexOf(query.toLocaleLowerCase());
+  if (index === -1) return text;
+  return <>{text.slice(0, index)}<mark className="bg-accent/30 text-primary rounded px-0.5">{text.slice(index, index + query.length)}</mark>{text.slice(index + query.length)}</>;
 };
 
 export default function Navbar() {
-  const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
-  const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
-
-  // Debounce query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(query);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  // Perform search
-  useEffect(() => {
-    if (!debouncedQuery.trim()) {
-      setResults([]);
-      setIsSearching(false);
-      return;
-    }
-
-    const performSearch = async () => {
-      setIsSearching(true);
-      try {
-        const response = await api.get('/search', { params: { q: debouncedQuery } });
-        setResults(response.data.data.results);
-      } catch (error) {
-        console.error('Search failed', error);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    performSearch();
-  }, [debouncedQuery]);
-
-  // Click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleResultClick = () => {
-    setIsDropdownOpen(false);
-    setQuery('');
-    navigate('/dashboard');
-  };
-
-  return (
-    <nav className="sticky top-0 z-30 h-16 bg-zinc-950/55 backdrop-blur-2xl border-b border-white/10 px-6 flex items-center justify-between shadow-2xl shadow-black/20">
-      <Link to="/dashboard" className="flex items-center gap-2.5 cursor-pointer">
-        <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent text-white shadow-lg shadow-indigo-500/20">
-          <Shield className="w-4 h-4" />
-        </span>
-        <span className="text-base font-semibold text-primary">SecureDoc</span>
-      </Link>
-
-      <div className="flex-1 max-w-xl px-8" ref={searchRef}>
-        <div className="relative">
-          <div className="relative flex items-center">
-            <Search className="absolute left-3 w-4 h-4 text-muted" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setIsDropdownOpen(true);
-              }}
-              onFocus={() => setIsDropdownOpen(true)}
-              placeholder="Search files and folders..."
-              className="w-full py-2.5 pl-9 pr-4 rounded-xl bg-white/5 backdrop-blur border border-white/10 text-sm text-primary placeholder-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all"
-            />
-            {isSearching && <Loader2 className="absolute right-3 w-4 h-4 text-muted animate-spin" />}
-          </div>
-
-          {isDropdownOpen && query.trim() !== '' && (
-            <div className="absolute top-full mt-2 w-full rounded-xl z-50 max-h-96 overflow-y-auto bg-zinc-950 border border-white/15 shadow-2xl shadow-black/60">
-              {!isSearching && results.length === 0 ? (
-                <div className="p-4 text-sm text-muted text-center">No results found for "{query}"</div>
-              ) : (
-                <div className="py-1 divide-y divide-border/50">
-                  {results.map((result) => (
-                    <button
-                      key={result.id}
-                      onClick={() => handleResultClick()}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-bg cursor-pointer text-left transition-colors"
-                    >
-                      {result.type === 'folder' ? (
-                        <Folder className="w-4 h-4 text-accent shrink-0" />
-                      ) : (
-                        <File className="w-4 h-4 text-muted shrink-0" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-primary truncate">
-                          {result.type === 'folder' ? result.name : result.originalName}
-                        </p>
-                        {result.type === 'file' && (
-                          <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted">
-                            <FileText className="w-3 h-3 shrink-0" />
-                            {result.matchType === 'content' ? 'Content match' : 'Filename match'}
-                          </p>
-                        )}
-                        {result.snippet && (
-                          <p className="mt-1 text-xs text-muted leading-5 line-clamp-2">
-                            {highlightMatch(result.snippet, query)}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted truncate">in {result.location}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-        <div className="text-right hidden sm:block">
-          <p className="text-sm font-medium text-primary">{user?.name || 'User'}</p>
-          <p className="text-xs text-muted">{user?.email}</p>
-        </div>
-
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-primary bg-white/5 backdrop-blur border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          Logout
-        </button>
-      </div>
-    </nav>
-  );
+  const { user, logout } = useAuthStore(); const navigate = useNavigate();
+  const [query, setQuery] = useState(''); const [results, setResults] = useState<SearchResult[]>([]); const [isSearching, setIsSearching] = useState(false); const [isDropdownOpen, setIsDropdownOpen] = useState(false); const [isMenuOpen, setIsMenuOpen] = useState(false); const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); const [searchError, setSearchError] = useState(''); const searchRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { const term = query.trim(); if (!term) { setResults([]); setSearchError(''); setIsSearching(false); return; } const timer = window.setTimeout(async () => { setIsSearching(true); try { const response = await api.get('/search', { params: { q: term } }); setResults(response.data.data.results); setSearchError(''); } catch { setResults([]); setSearchError('Search is temporarily unavailable. Please try again.'); } finally { setIsSearching(false); } }, 300); return () => window.clearTimeout(timer); }, [query]);
+  useEffect(() => { const close = (event: MouseEvent) => { if (searchRef.current && !searchRef.current.contains(event.target as Node)) setIsDropdownOpen(false); }; document.addEventListener('mousedown', close); return () => document.removeEventListener('mousedown', close); }, []);
+  const handleLogout = () => { logout(); navigate('/login', { replace: true }); }; const handleResultClick = () => { setIsDropdownOpen(false); setIsMobileSearchOpen(false); setQuery(''); navigate('/dashboard'); }; const closeMenu = () => setIsMenuOpen(false);
+  return <nav className="sticky top-0 z-30 h-16 bg-zinc-950 border-b border-white/10 px-3 sm:px-6 flex items-center justify-between shadow-2xl shadow-black/20">
+    <button onClick={() => setIsMenuOpen(true)} aria-label="Open navigation menu" className="touch-target lg:hidden rounded-lg flex items-center justify-center text-primary hover:bg-white/10"><Menu className="w-5 h-5" /></button>
+    <Link to="/dashboard" className="flex items-center gap-2.5 cursor-pointer"><span className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent text-white"><Shield className="w-4 h-4" /></span><span className="hidden sm:block text-base font-semibold text-primary">SecureDoc</span></Link>
+    <div className={`absolute left-3 right-3 top-[4.5rem] lg:static lg:flex lg:flex-1 lg:max-w-xl lg:px-8 ${isMobileSearchOpen ? 'block' : 'hidden'}`} ref={searchRef}><div className="relative"><div className="relative flex items-center"><Search className="absolute left-3 w-4 h-4 text-muted" /><input type="search" value={query} onChange={(e) => { setQuery(e.target.value); setIsDropdownOpen(true); }} onFocus={() => setIsDropdownOpen(true)} placeholder="Search files and folders..." className="w-full py-2.5 pl-9 pr-9 rounded-xl bg-zinc-950/95 border border-white/10 text-sm text-primary placeholder-muted outline-none focus:border-accent focus:ring-2 focus:ring-accent/30" />{isSearching && <Loader2 className="absolute right-3 w-4 h-4 text-muted animate-spin" />}</div>{isDropdownOpen && query.trim() && <div className="absolute top-full mt-2 w-full rounded-xl z-50 max-h-96 overflow-y-auto bg-zinc-950 border border-white/15 shadow-2xl shadow-black/60">{searchError ? <div className="p-4 text-sm text-danger text-center">{searchError}</div> : !isSearching && results.length === 0 ? <div className="p-4 text-sm text-muted text-center">No results found for “{query}”</div> : <div className="py-1 divide-y divide-border/50">{results.map((result) => <button key={result.id} onClick={handleResultClick} className="w-full min-h-11 flex items-center gap-3 px-4 py-2.5 hover:bg-bg text-left">{result.type === 'folder' ? <Folder className="w-4 h-4 text-accent shrink-0" /> : <File className="w-4 h-4 text-muted shrink-0" />}<div className="min-w-0 flex-1"><p className="text-sm font-medium text-primary truncate">{result.type === 'folder' ? result.name : result.originalName}</p>{result.type === 'file' && <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted"><FileText className="w-3 h-3 shrink-0" />{result.matchType === 'content' ? 'Content match' : 'Filename match'}</p>}{result.snippet && <p className="mt-1 text-xs text-muted leading-5 line-clamp-2">{highlightMatch(result.snippet, query)}</p>}<p className="text-xs text-muted truncate">in {result.location}</p></div></button>)}</div>}</div>}</div></div>
+    <div className="flex items-center gap-1 sm:gap-4 shrink-0"><button onClick={() => setIsMobileSearchOpen((value) => !value)} aria-label="Search files and folders" aria-expanded={isMobileSearchOpen} className="touch-target lg:hidden rounded-lg flex items-center justify-center text-primary hover:bg-white/10"><Search className="w-5 h-5" /></button><div className="text-right hidden lg:block"><p className="text-sm font-medium text-primary">{user?.name || 'User'}</p><p className="text-xs text-muted">{user?.email}</p></div><button onClick={handleLogout} aria-label="Log out" className="touch-target flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-primary bg-white/5 border border-white/10 hover:bg-white/10"><LogOut className="w-3.5 h-3.5" /><span className="hidden lg:inline">Logout</span></button></div>
+    {isMenuOpen && <><button aria-label="Close navigation menu" onClick={closeMenu} className="fixed inset-0 z-[100] bg-black/70 lg:hidden" /><aside className="fixed inset-y-0 left-0 z-[110] w-[min(18rem,86vw)] p-4 bg-[#09090b] border-r border-white/10 shadow-2xl lg:hidden"><div className="flex items-center justify-between mb-6"><span className="font-semibold text-primary">Navigation</span><button onClick={closeMenu} aria-label="Close navigation menu" className="touch-target rounded-lg flex items-center justify-center hover:bg-white/10"><X className="w-5 h-5" /></button></div><div className="space-y-1"><DrawerLink to="/dashboard" label="My Drive" icon={Folder} onClick={closeMenu} /><DrawerLink to="/dashboard?view=shared" label="Shared with me" icon={Users} onClick={closeMenu} />{user?.orgMemberships?.length ? <DrawerLink to="/org/members" label="Members" icon={Users} onClick={closeMenu} /> : null}<DrawerLink to="/audit" label="Audit" icon={ShieldCheck} onClick={closeMenu} />{user?.accountType === 'ORGANIZATION' ? <DrawerLink to="/approvals" label="Approvals" icon={ClipboardCheck} onClick={closeMenu} /> : null}<DrawerLink to="/trash" label="Trash" icon={Trash2} onClick={closeMenu} /></div></aside></>}
+  </nav>;
 }
+
+const DrawerLink = ({ to, label, icon: Icon, onClick }: { to: string; label: string; icon: typeof Folder; onClick: () => void }) => <Link onClick={onClick} to={to} className="touch-target w-full px-3 rounded-lg flex items-center gap-3 text-sm text-primary hover:bg-white/10"><Icon className="w-4 h-4 text-accent" />{label}</Link>;

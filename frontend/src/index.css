@@ -67,6 +67,14 @@
   }
 
   button, a { -webkit-tap-highlight-color: transparent; }
+
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--color-accent-hover);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px) { body { background-attachment: scroll; } }
+  @media (prefers-reduced-motion: reduce) { *, ::before, ::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
 }
 
 @layer utilities {
@@ -81,4 +89,5 @@
     border-color: rgb(255 255 255 / 0.10);
     backdrop-filter: blur(16px);
   }
+  .touch-target { min-width: 44px; min-height: 44px; }
 }

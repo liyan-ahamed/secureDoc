@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
-import { FileVersion, SecureFile, SecureFolder, Share, SharePermission } from '../types';
+import { FileVersion, SecureFile, SecureFolder, Share, SharePermission, ShareUser } from '../types';
 import Navbar from '../components/Navbar';
 
 type Toast = { message: string; type: 'success' | 'error' };
@@ -55,6 +55,7 @@ const Dashboard = () => {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [formSaving, setFormSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [menu, setMenu] = useState<MenuState>(null);
   const [folderModal, setFolderModal] = useState<{ mode: 'create' | 'rename'; folder?: SecureFolder } | null>(null);
@@ -64,6 +65,9 @@ const Dashboard = () => {
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [shareTarget, setShareTarget] = useState<ShareTarget | null>(null);
   const [shareEmail, setShareEmail] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState<ShareUser[]>([]);
+  const [userSearchLoading, setUserSearchLoading] = useState(false);
+  const [showUserSearch, setShowUserSearch] = useState(false);
   const [sharePermission, setSharePermission] = useState<SharePermission>('VIEW');
   const [linkShare, setLinkShare] = useState(false);
   const [expiry, setExpiry] = useState('7');
@@ -88,6 +92,33 @@ const Dashboard = () => {
     void loadSharedWithMe();
     if (canApprove) void loadPendingCount();
   }, []);
+
+  useEffect(() => {
+    const query = shareEmail.trim();
+    if (!shareTarget || linkShare || !query) {
+      setUserSearchResults([]);
+      setUserSearchLoading(false);
+      return;
+    }
+
+    let active = true;
+    setUserSearchLoading(true);
+    const timeout = setTimeout(async () => {
+      try {
+        const response = await api.get('/users/search', { params: { q: query } });
+        if (active) setUserSearchResults(response.data.data.users);
+      } catch {
+        if (active) setUserSearchResults([]);
+      } finally {
+        if (active) setUserSearchLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+    };
+  }, [shareEmail, shareTarget, linkShare]);
 
   useEffect(() => {
     const closeMenu = () => setMenu(null);
@@ -182,6 +213,8 @@ const Dashboard = () => {
       await Promise.all([loadTree(), loadContents(currentFolderId)]);
     } catch {
       showToast('Could not save folder', 'error');
+    } finally {
+      setFormSaving(false);
     }
   };
 
@@ -189,6 +222,7 @@ const Dashboard = () => {
     setMenu(null);
     if (!window.confirm(`Delete "${folder.name}" and everything inside it?`)) return;
 
+    setFormSaving(true);
     try {
       await api.delete(`/folders/${folder.id}`);
       showToast('Folder deleted');
@@ -320,6 +354,8 @@ const Dashboard = () => {
   const openShareModal = async (target: ShareTarget) => {
     setShareTarget(target);
     setShareEmail('');
+    setUserSearchResults([]);
+    setShowUserSearch(false);
     setSharePermission('VIEW');
     setLinkShare(false);
     setExpiry('7');
@@ -331,6 +367,8 @@ const Dashboard = () => {
   const createShare = async (event: FormEvent) => {
     event.preventDefault();
     if (!shareTarget) return;
+
+    setFormSaving(true);
 
     const expiresAt = linkShare && expiry !== 'never'
       ? new Date(Date.now() + Number(expiry) * 24 * 60 * 60 * 1000).toISOString()
@@ -354,6 +392,8 @@ const Dashboard = () => {
       await Promise.all([loadMyShares(), loadContents(currentFolderId)]);
     } catch {
       showToast('Could not create share', 'error');
+    } finally {
+      setFormSaving(false);
     }
   };
 
@@ -395,7 +435,7 @@ const Dashboard = () => {
       <Navbar />
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden md:block">
+        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden lg:block">
           <button
             onClick={() => { setFolderName(''); setFolderModal({ mode: 'create' }); }}
             className="w-full py-2 px-4 mb-4 rounded-md bg-accent text-bg text-sm font-medium flex items-center justify-center gap-2 hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
@@ -482,7 +522,7 @@ const Dashboard = () => {
           </div>
         </aside>
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
             <div>
               <div className="flex items-center gap-1.5 text-sm text-muted flex-wrap">
@@ -513,7 +553,7 @@ const Dashboard = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => { setFolderName(''); setFolderModal({ mode: 'create' }); }}
-                  className="md:hidden py-2 px-4 rounded-md border border-border text-sm text-primary flex items-center gap-2 hover:bg-bg transition-colors cursor-pointer"
+                  className="lg:hidden min-h-11 py-2 px-4 rounded-md border border-border text-sm text-primary flex items-center gap-2 hover:bg-bg transition-colors cursor-pointer"
                 >
                   <FolderPlus className="w-4 h-4" />
                   New Folder
@@ -637,9 +677,10 @@ const Dashboard = () => {
               </button>
               <button
                 type="submit"
-                className="py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
+                disabled={formSaving}
+                className="min-h-11 py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium hover:bg-accent-hover disabled:opacity-70 transition-colors cursor-pointer shadow-sm"
               >
-                Save
+                {formSaving && <Loader2 className="inline w-4 h-4 mr-2 animate-spin" />}Save
               </button>
             </div>
           </form>
@@ -658,6 +699,12 @@ const Dashboard = () => {
               />
               Generate a public link
             </label>
+            {!linkShare && (
+              <div>
+                <label htmlFor="share-user-search" className="block text-sm font-medium text-primary mb-1.5">Share with a person</label>
+                <p className="text-xs text-muted">Search registered users by name or email, then select the person who should receive access.</p>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-3">
               {linkShare ? (
                 <select
@@ -671,12 +718,49 @@ const Dashboard = () => {
                   <option value="never">Never</option>
                 </select>
               ) : (
-                <input
-                  value={shareEmail}
-                  onChange={(event) => setShareEmail(event.target.value)}
-                  className="h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-bg text-primary placeholder-muted"
-                  placeholder="user@example.com"
-                />
+                <div className="relative">
+                  <input
+                    id="share-user-search"
+                    autoFocus
+                    value={shareEmail}
+                    onChange={(event) => {
+                      setShareEmail(event.target.value);
+                      setShowUserSearch(true);
+                    }}
+                    onFocus={() => shareEmail.trim() && setShowUserSearch(true)}
+                    className="w-full h-10 px-3 rounded-md border border-border text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-bg text-primary placeholder-muted"
+                    placeholder="Search people by name or email"
+                    aria-label="Search people by name or email"
+                    aria-autocomplete="list"
+                    aria-expanded={showUserSearch}
+                  />
+                  {showUserSearch && shareEmail.trim() && (
+                    <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border border-border bg-bg shadow-xl">
+                      {userSearchLoading ? (
+                        <p className="px-3 py-2.5 text-sm text-muted">Searching users…</p>
+                      ) : userSearchResults.length > 0 ? (
+                        userSearchResults.map((searchUser) => (
+                          <button
+                            key={searchUser.id}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setShareEmail(searchUser.email);
+                              setUserSearchResults([]);
+                              setShowUserSearch(false);
+                            }}
+                            className="w-full px-3 py-2.5 text-left hover:bg-white/10 transition-colors cursor-pointer"
+                          >
+                            <p className="truncate text-sm font-medium text-primary">{searchUser.name}</p>
+                            <p className="truncate text-xs text-muted">{searchUser.email}</p>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-3 py-2.5 text-sm text-muted">No users found</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
               <select
                 value={sharePermission}
@@ -690,9 +774,10 @@ const Dashboard = () => {
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
+                disabled={formSaving}
+                className="min-h-11 py-2 px-4 rounded-md bg-accent text-bg text-sm font-medium hover:bg-accent-hover disabled:opacity-70 transition-colors cursor-pointer shadow-sm"
               >
-                {linkShare ? 'Generate Link' : 'Share'}
+                {formSaving && <Loader2 className="inline w-4 h-4 mr-2 animate-spin" />}{linkShare ? 'Generate Link' : 'Share'}
               </button>
             </div>
           </form>
@@ -827,7 +912,7 @@ const Dashboard = () => {
 };
 
 const TableHeader = () => (
-  <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
+  <div className="hidden sm:grid sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
     <span>Name</span>
     <span className="hidden sm:block">Size</span>
     <span className="hidden lg:block">Modified</span>
@@ -914,7 +999,7 @@ const FolderTreeItem = ({ folder, level, expanded, currentFolderId, onToggle, on
 };
 
 const FolderRow = ({ folder, onOpen, onShare, onMenu }: { folder: SecureFolder; onOpen: () => void; onShare: () => void; onMenu: (event: MouseEvent) => void }) => (
-  <div onContextMenu={onMenu} className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
+  <div onContextMenu={onMenu} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
     <button onClick={onOpen} className="min-w-0 flex items-center gap-3 text-left cursor-pointer group">
       <Folder className="w-5 h-5 text-accent shrink-0" />
       <span className="text-sm font-medium text-primary group-hover:text-accent transition-colors truncate">{folder.name}</span>
@@ -922,17 +1007,17 @@ const FolderRow = ({ folder, onOpen, onShare, onMenu }: { folder: SecureFolder; 
     </button>
     <span className="hidden sm:block text-sm text-muted">Folder</span>
     <span className="hidden lg:block text-sm text-muted">{relativeTime(folder.updatedAt)}</span>
-    <div className="justify-self-end flex items-center gap-1">
+    <div className="justify-self-start sm:justify-self-end flex items-center gap-1">
       <button
         onClick={onShare}
-        className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
+        className="touch-target rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
         title="Share"
       >
         <Share2 className="w-4 h-4" />
       </button>
       <button
         onClick={onMenu}
-        className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
+        className="touch-target rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
         title="More"
       >
         <MoreHorizontal className="w-4 h-4" />
@@ -944,7 +1029,7 @@ const FolderRow = ({ folder, onOpen, onShare, onMenu }: { folder: SecureFolder; 
 const FileRow = ({ file, onDownload, onView, onVersions, onShare, onMenu }: { file: SecureFile; onDownload: () => void; onView: () => void; onVersions: () => void; onShare: () => void; onMenu: (event: MouseEvent) => void }) => {
   const Icon = getFileIcon(file.mimeType);
   return (
-    <div onContextMenu={onMenu} className={`grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors ${file.status !== 'APPROVED' ? 'bg-white/[0.02] border-l-2 border-dashed border-warning/60 opacity-80' : ''}`}>
+    <div onContextMenu={onMenu} className={`grid grid-cols-1 sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors ${file.status !== 'APPROVED' ? 'bg-white/[0.02] border-l-2 border-dashed border-warning/60 opacity-80' : ''}`}>
       <div className="min-w-0 flex items-center gap-3">
         <Icon className="w-5 h-5 text-muted shrink-0" />
         <div className="min-w-0">
@@ -957,7 +1042,7 @@ const FileRow = ({ file, onDownload, onView, onVersions, onShare, onMenu }: { fi
       </div>
       <span className="hidden sm:block text-sm text-muted">{formatSize(file.size)}</span>
       <span className="hidden lg:block text-sm text-muted">{relativeTime(file.updatedAt)}</span>
-      <div className="justify-self-end flex items-center gap-1">
+      <div className="justify-self-start sm:justify-self-end flex flex-wrap items-center gap-1">
         {file.mimeType === 'application/pdf' && (
           <button onClick={onView} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer" title="View PDF">
             <Eye className="w-4 h-4" />
@@ -979,10 +1064,12 @@ const FileRow = ({ file, onDownload, onView, onVersions, onShare, onMenu }: { fi
         </button>
         <button
           onClick={onShare}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer"
+          aria-label={`Share ${file.originalName}`}
+          className="min-h-11 px-3 rounded-lg inline-flex items-center justify-center gap-1.5 text-accent bg-accent/10 border border-accent/30 hover:text-primary hover:bg-accent/20 hover:border-accent/50 transition-colors cursor-pointer"
           title="Share"
         >
-          <Share2 className="w-4 h-4" />
+          <Share2 className="w-5 h-5" />
+          <span className="text-xs font-medium">Share</span>
         </button>
         <button
           onClick={onMenu}
@@ -997,7 +1084,7 @@ const FileRow = ({ file, onDownload, onView, onVersions, onShare, onMenu }: { fi
 };
 
 const SharedFolderRow = ({ share, folder, onOpen }: { share: Share; folder: SecureFolder; onOpen: () => void }) => (
-  <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
+  <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
     <button onClick={onOpen} className="min-w-0 flex items-center gap-3 text-left cursor-pointer group">
       <Folder className="w-5 h-5 text-accent shrink-0" />
       <div className="min-w-0">
@@ -1007,7 +1094,7 @@ const SharedFolderRow = ({ share, folder, onOpen }: { share: Share; folder: Secu
     </button>
     <span className="hidden sm:block text-sm text-muted">{share.permission}</span>
     <span className="hidden lg:block text-sm text-muted">{relativeTime(folder.updatedAt)}</span>
-    <span className="justify-self-end text-xs font-medium px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20 flex items-center gap-1">
+    <span className="justify-self-start sm:justify-self-end text-xs font-medium px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20 flex items-center gap-1">
       <Share2 className="w-3 h-3" />
       Shared
     </span>
@@ -1017,7 +1104,7 @@ const SharedFolderRow = ({ share, folder, onOpen }: { share: Share; folder: Secu
 const SharedFileRow = ({ share, file, onDownload, onView, onVersions, onUploadVersion }: { share: Share; file: SecureFile; onDownload: () => void; onView: () => void; onVersions: () => void; onUploadVersion: () => void }) => {
   const Icon = getFileIcon(file.mimeType);
   return (
-    <div className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
+    <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
       <div className="min-w-0 flex items-center gap-3">
         <Icon className="w-5 h-5 text-muted shrink-0" />
         <div className="min-w-0">
@@ -1027,7 +1114,7 @@ const SharedFileRow = ({ share, file, onDownload, onView, onVersions, onUploadVe
       </div>
       <span className="hidden sm:block text-sm text-muted">{formatSize(file.size)}</span>
       <span className="hidden lg:block text-sm text-muted">{relativeTime(file.updatedAt)}</span>
-      <div className="justify-self-end flex items-center gap-1">
+      <div className="justify-self-start sm:justify-self-end flex flex-wrap items-center gap-1">
         {file.mimeType === 'application/pdf' && (
           <button onClick={onView} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-primary hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors cursor-pointer" title="View PDF">
             <Eye className="w-4 h-4" />
@@ -1087,8 +1174,8 @@ const MenuButton = ({ onClick, icon: Icon, label, danger = false }: { onClick: (
 );
 
 const Modal = ({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) => (
-  <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center px-4 transition-all">
-    <div className={`glass-panel rounded-2xl ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'} overflow-hidden`}>
+  <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:px-4 transition-all">
+    <div className={`glass-panel rounded-2xl ${wide ? 'w-full max-w-2xl' : 'w-full max-w-md'} max-h-[calc(100dvh-1.5rem)] overflow-y-auto`} role="dialog" aria-modal="true" aria-label={title}>
       <div className="h-12 px-5 border-b border-border flex items-center justify-between">
         <h2 className="text-sm font-semibold text-primary truncate pr-4">{title}</h2>
         <button
@@ -1098,7 +1185,7 @@ const Modal = ({ title, children, onClose, wide = false }: { title: string; chil
           <X className="w-4 h-4" />
         </button>
       </div>
-      <div className="p-6">{children}</div>
+      <div className="p-4 sm:p-6">{children}</div>
     </div>
   </div>
 );

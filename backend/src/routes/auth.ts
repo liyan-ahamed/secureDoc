@@ -236,7 +236,6 @@ router.get('/me', authenticate, async (req: Request, res: Response) => {
     // Try to get from cache first
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
-      console.log('[Redis] Served GET /me from cache');
       res.json({
         success: true,
         data: { user: JSON.parse(cachedData) },
@@ -265,7 +264,6 @@ router.get('/me', authenticate, async (req: Request, res: Response) => {
     
     // Save to cache with 5 minute TTL
     await redis.setex(cacheKey, 5 * 60, JSON.stringify(sanitizedUser));
-    console.log('[Redis] Served GET /me from DB');
 
     res.json({
       success: true,

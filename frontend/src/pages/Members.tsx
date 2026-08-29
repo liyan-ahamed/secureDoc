@@ -36,6 +36,7 @@ export default function Members() {
   const [inviteRole, setInviteRole] = useState<'ADMIN' | 'MEMBER'>('MEMBER');
   const [inviteLink, setInviteLink] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const orgId = user?.orgMemberships?.[0]?.orgId;
   const currentUserRole = user?.orgMemberships?.[0]?.role;
@@ -54,8 +55,8 @@ export default function Members() {
       const response = await api.get(`/orgs/${orgId}`);
       setMembers(response.data.data.org.members);
       setInvites(response.data.data.org.invites || []);
-    } catch (error) {
-      console.error('Failed to load members', error);
+    } catch {
+      setErrorMessage('We could not load organization members. Please refresh and try again.');
     } finally {
       setLoading(false);
     }
@@ -122,7 +123,7 @@ export default function Members() {
       <Navbar />
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden md:block">
+        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden lg:block">
           <Link
             to="/dashboard"
             className="w-full h-9 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
@@ -150,7 +151,7 @@ export default function Members() {
           </Link>
         </aside>
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
             <div>
               <h1 className="text-xl font-semibold text-primary">Organization Members</h1>
@@ -168,7 +169,7 @@ export default function Members() {
           </div>
 
           <section className="glass-panel rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-[1fr_120px_150px_100px] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
+            <div className="hidden sm:grid sm:grid-cols-[1fr_120px_150px_100px] gap-3 px-4 py-3 bg-bg border-b border-border text-xs font-medium text-muted uppercase tracking-wider items-center">
               <span>Member</span>
               <span>Role</span>
               <span>Joined</span>
@@ -182,8 +183,8 @@ export default function Members() {
               </div>
             ) : (
               <div className="divide-y divide-border/60">
-                {members.map((member) => (
-                  <div key={member.id} className="grid grid-cols-[1fr_120px_150px_100px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
+                {errorMessage ? <p className="p-4 text-sm text-danger">{errorMessage}</p> : members.map((member) => (
+                  <div key={member.id} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_150px_100px] gap-3 items-center px-4 py-4 hover:bg-bg transition-colors">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-primary truncate">{member.user.name}</p>
                       <p className="text-xs text-muted truncate">{member.user.email}</p>
@@ -202,15 +203,15 @@ export default function Members() {
                       <span className="text-sm text-muted">{member.role}</span>
                     )}
                     
-                    <span className="text-sm text-muted">
+                    <span className="text-sm text-muted"><span className="sm:hidden font-medium text-primary mr-2">Joined:</span>
                       {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(member.user.createdAt))}
                     </span>
                     
                     <div className="justify-self-end">
                       {canManage && member.role !== 'OWNER' && (member.role !== 'ADMIN' || currentUserRole === 'OWNER') && (
-                        <button
+                        <button aria-label={`Remove ${member.user.name}`}
                           onClick={() => handleRemove(member.userId, member.user.name)}
-                          className="w-8 h-8 rounded-md flex items-center justify-center text-danger hover:bg-danger/10 transition-colors cursor-pointer"
+                          className="touch-target rounded-md flex items-center justify-center text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                           title="Remove member"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -221,7 +222,7 @@ export default function Members() {
                 ))}
 
                 {invites.map((invite) => (
-                  <div key={invite.id} className="grid grid-cols-[1fr_120px_150px_100px] gap-3 items-center px-4 py-3 hover:bg-bg opacity-75 transition-colors">
+                  <div key={invite.id} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_150px_100px] gap-3 items-center px-4 py-4 hover:bg-bg opacity-75 transition-colors">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-primary truncate">{invite.email}</p>
                       <span className="inline-block mt-0.5 text-[11px] font-medium px-1.5 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
@@ -316,8 +317,8 @@ export default function Members() {
 }
 
 const Modal = ({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void; }) => (
-  <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center px-4 transition-all">
-    <div className="glass-panel rounded-2xl w-full max-w-md overflow-hidden">
+  <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:px-4 transition-all">
+    <div className="glass-panel rounded-2xl w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-y-auto" role="dialog" aria-modal="true" aria-label={title}>
       <div className="h-12 px-5 border-b border-border flex items-center justify-between">
         <h2 className="text-sm font-semibold text-primary truncate pr-4">{title}</h2>
         <button
@@ -327,7 +328,7 @@ const Modal = ({ title, children, onClose }: { title: string; children: ReactNod
           <X className="w-4 h-4" />
         </button>
       </div>
-      <div className="p-6">{children}</div>
+      <div className="p-4 sm:p-6">{children}</div>
     </div>
   </div>
 );

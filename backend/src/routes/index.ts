@@ -9,6 +9,7 @@ import orgsRouter from './orgs';
 import searchRouter from './search';
 import trashRouter from './trash';
 import approvalsRouter from './approvals';
+import usersRouter from './users';
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/orgs', orgsRouter);
 router.use('/search', searchRouter);
 router.use('/trash', trashRouter);
 router.use('/approvals', approvalsRouter);
+router.use('/users', usersRouter);
 
 export default router;
