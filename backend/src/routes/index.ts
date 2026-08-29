@@ -8,6 +8,7 @@ import auditRouter from './audit';
 import orgsRouter from './orgs';
 import searchRouter from './search';
 import trashRouter from './trash';
+import approvalsRouter from './approvals';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/audit', auditRouter);
 router.use('/orgs', orgsRouter);
 router.use('/search', searchRouter);
 router.use('/trash', trashRouter);
+router.use('/approvals', approvalsRouter);
 
 export default router;

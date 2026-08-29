@@ -1,5 +1,5 @@
-import { ChangeEvent, FormEvent, MouseEvent, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ChangeEvent, FormEvent, MouseEvent, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -23,6 +23,7 @@ import {
   X,
   Check,
   ShieldCheck,
+  ClipboardCheck,
 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
@@ -69,6 +70,9 @@ const Dashboard = () => {
   const [generatedLink, setGeneratedLink] = useState('');
   const [targetVersionFile, setTargetVersionFile] = useState<SecureFile | null>(null);
   const [pdfPreview, setPdfPreview] = useState<{ name: string; url: string } | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
+  const orgRole = user?.orgMemberships?.[0]?.role;
+  const canApprove = Boolean(user?.accountType === 'ORGANIZATION' && (orgRole === 'OWNER' || orgRole === 'ADMIN'));
 
   const folderTree = useMemo(() => buildFolderTree(folders), [folders]);
   const isRootEmpty = !currentFolderId && subfolders.length === 0 && files.length === 0;
@@ -82,6 +86,7 @@ const Dashboard = () => {
     void loadContents(null);
     void loadMyShares();
     void loadSharedWithMe();
+    if (canApprove) void loadPendingCount();
   }, []);
 
   useEffect(() => {
@@ -109,6 +114,11 @@ const Dashboard = () => {
   const loadSharedWithMe = async () => {
     const response = await api.get('/shares/shared-with-me');
     setSharedWithMe(response.data.data.shares);
+  };
+
+  const loadPendingCount = async () => {
+    const response = await api.get('/approvals/pending');
+    setPendingCount(response.data.data.count);
   };
 
   const loadContents = async (folderId: string | null) => {
@@ -201,7 +211,7 @@ const Dashboard = () => {
     setUploading(true);
     try {
       const response = await api.post('/files/upload', formData);
-      showToast(response.data.data.isNewVersion ? 'New version uploaded' : 'File uploaded');
+      showToast(response.data.data.file.status === 'PENDING' ? 'Uploaded — awaiting admin approval' : response.data.data.isNewVersion ? 'New version uploaded' : 'File uploaded');
       await Promise.all([loadContents(currentFolderId), loadTree(), loadMyShares()]);
     } catch {
       showToast('Upload failed', 'error');
@@ -425,6 +435,14 @@ const Dashboard = () => {
             >
               <Users className="w-4 h-4 text-accent" />
               Members
+            </Link>
+          )}
+
+          {canApprove && (
+            <Link to="/approvals" className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors">
+              <ClipboardCheck className="w-4 h-4 text-accent" />
+              <span className="flex-1">Approvals</span>
+              {pendingCount > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-danger text-white text-[11px] font-semibold flex items-center justify-center">{pendingCount}</span>}
             </Link>
           )}
 
@@ -926,7 +944,7 @@ const FolderRow = ({ folder, onOpen, onShare, onMenu }: { folder: SecureFolder; 
 const FileRow = ({ file, onDownload, onView, onVersions, onShare, onMenu }: { file: SecureFile; onDownload: () => void; onView: () => void; onVersions: () => void; onShare: () => void; onMenu: (event: MouseEvent) => void }) => {
   const Icon = getFileIcon(file.mimeType);
   return (
-    <div onContextMenu={onMenu} className="grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors">
+    <div onContextMenu={onMenu} className={`grid grid-cols-[1fr_112px] sm:grid-cols-[1fr_120px_112px] lg:grid-cols-[1fr_120px_150px_112px] gap-3 items-center px-4 py-3 hover:bg-bg transition-colors ${file.status !== 'APPROVED' ? 'bg-white/[0.02] border-l-2 border-dashed border-warning/60 opacity-80' : ''}`}>
       <div className="min-w-0 flex items-center gap-3">
         <Icon className="w-5 h-5 text-muted shrink-0" />
         <div className="min-w-0">
@@ -934,6 +952,8 @@ const FileRow = ({ file, onDownload, onView, onVersions, onShare, onMenu }: { fi
           <p className="text-xs text-muted">Version {file.currentVersion}</p>
         </div>
         {hasShares(file) && <SharedBadge />}
+        {file.status === 'PENDING' && <StatusBadge status="PENDING" />}
+        {file.status === 'REJECTED' && <StatusBadge status="REJECTED" reason={file.rejectionReason} />}
       </div>
       <span className="hidden sm:block text-sm text-muted">{formatSize(file.size)}</span>
       <span className="hidden lg:block text-sm text-muted">{relativeTime(file.updatedAt)}</span>
@@ -1045,6 +1065,12 @@ const SharedBadge = () => (
   <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium bg-accent/10 text-accent border border-accent/20">
     <Share2 className="w-3 h-3" />
     Shared
+  </span>
+);
+
+const StatusBadge = ({ status, reason }: { status: 'PENDING' | 'REJECTED'; reason?: string | null }) => (
+  <span title={reason || undefined} className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-medium border ${status === 'PENDING' ? 'bg-warning/10 text-warning border-warning/20' : 'bg-danger/10 text-danger border-danger/20'}`}>
+    {status === 'PENDING' ? 'Pending Approval' : 'Rejected'}
   </span>
 );
 

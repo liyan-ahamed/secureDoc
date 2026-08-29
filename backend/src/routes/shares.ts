@@ -18,9 +18,9 @@ const getTarget = async (fileId?: string, folderId?: string) => {
   if (fileId) {
     const file = await prisma.file.findFirst({
       where: { id: fileId, deletedAt: null },
-      select: { id: true, ownerId: true, originalName: true },
+      select: { id: true, ownerId: true, originalName: true, status: true },
     });
-    return file ? { type: 'FILE' as const, id: file.id, ownerId: file.ownerId, name: file.originalName } : null;
+    return file ? { type: 'FILE' as const, id: file.id, ownerId: file.ownerId, name: file.originalName, status: file.status } : null;
   }
 
   if (folderId) {
@@ -129,6 +129,11 @@ router.post('/', async (req: Request, res: Response) => {
         success: false,
         error: { message: 'Share target not found' },
       });
+      return;
+    }
+
+    if (target.type === 'FILE' && target.status !== 'APPROVED') {
+      res.status(400).json({ success: false, error: { message: 'Only approved files can be shared' } });
       return;
     }
 

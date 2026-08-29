@@ -1,3 +1,4 @@
+import { FileStatus } from '@prisma/client';
 import { Router, Request, Response } from 'express';
 import prisma from '../config/database';
 import redis from '../config/redis';
@@ -25,6 +26,10 @@ router.get('/', async (req: Request, res: Response) => {
     const type = (req.query.type as string) || 'all';
     const orgId = req.query.orgId as string | undefined;
     const userId = req.user!.userId;
+    const activeOrgId = orgId || req.user!.orgId;
+    const membership = activeOrgId
+      ? await prisma.orgMember.findUnique({ where: { userId_orgId: { userId, orgId: activeOrgId } } })
+      : null;
 
     if (!q || q.trim().length === 0) {
       res.json({ success: true, data: { results: [] }});
@@ -53,6 +58,12 @@ router.get('/', async (req: Request, res: Response) => {
       ],
       ...(orgId ? { orgId } : {}), // Optionally filter by orgId if provided
     };
+    const fileAccessFilter = membership && activeOrgId
+      ? {
+          orgId: activeOrgId,
+          OR: [{ status: FileStatus.APPROVED }, { ownerId: userId }],
+        }
+      : accessFilter;
 
     let files: any[] = [];
     let folders: any[] = [];
@@ -62,7 +73,7 @@ router.get('/', async (req: Request, res: Response) => {
         where: {
           deletedAt: null,
           AND: [
-            accessFilter,
+            fileAccessFilter,
             {
               OR: [
                 { originalName: { contains: searchQuery, mode: 'insensitive' } },

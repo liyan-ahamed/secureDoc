@@ -64,7 +64,7 @@ export const canAccessFile = async (
 ): Promise<AccessResult> => {
   const file = await prisma.file.findFirst({
     where: { id: fileId, deletedAt: null },
-    select: { id: true, ownerId: true, folderId: true },
+    select: { id: true, ownerId: true, folderId: true, orgId: true, status: true },
   });
 
   if (!file) {
@@ -73,6 +73,13 @@ export const canAccessFile = async (
 
   if (file.ownerId === userId) {
     return { allowed: true, permission: 'OWNER', isOwner: true };
+  }
+
+  if (file.orgId && file.status === 'APPROVED') {
+    const membership = await prisma.orgMember.findUnique({
+      where: { userId_orgId: { userId, orgId: file.orgId } },
+    });
+    if (membership) return { allowed: true, permission: 'VIEW', isOwner: false };
   }
 
   const folderIds = await getFolderAncestorIds(file.folderId);
@@ -108,7 +115,7 @@ export const canAccessFolder = async (
 ): Promise<AccessResult> => {
   const folder = await prisma.folder.findFirst({
     where: { id: folderId, deletedAt: null },
-    select: { id: true, ownerId: true, parentId: true },
+    select: { id: true, ownerId: true, parentId: true, orgId: true },
   });
 
   if (!folder) {
@@ -117,6 +124,13 @@ export const canAccessFolder = async (
 
   if (folder.ownerId === userId) {
     return { allowed: true, permission: 'OWNER', isOwner: true };
+  }
+
+  if (folder.orgId) {
+    const membership = await prisma.orgMember.findUnique({
+      where: { userId_orgId: { userId, orgId: folder.orgId } },
+    });
+    if (membership) return { allowed: true, permission: 'VIEW', isOwner: false };
   }
 
   const folderIds = await getFolderAncestorIds(folder.id);

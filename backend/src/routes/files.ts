@@ -81,6 +81,14 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
     const folderId = getOptionalFolderId(req.body.folderId) ?? null;
     const targetFileId = req.body.fileId ? String(req.body.fileId) : null;
     const orgId = req.body.orgId || req.user!.orgId || null;
+    const membership = orgId
+      ? await prisma.orgMember.findUnique({ where: { userId_orgId: { userId: ownerId, orgId: String(orgId) } } })
+      : null;
+    if (orgId && !membership) {
+      res.status(403).json({ success: false, error: { message: 'You are not a member of this organization' } });
+      return;
+    }
+    const status = membership?.role === 'MEMBER' ? 'PENDING' : 'APPROVED';
 
     if (!uploadedFile) {
       res.status(400).json({
@@ -107,7 +115,7 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
       ? await prisma.file.findFirst({ where: { id: targetFileId, deletedAt: null } })
       : await prisma.file.findFirst({
           where: {
-            ownerId: folderAccess.ownerId || ownerId,
+            ownerId,
             folderId,
             originalName: uploadedFile.originalname,
             deletedAt: null,
@@ -149,15 +157,17 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
             authTagHex,
             extractedText,
             currentVersion: { increment: 1 },
+            ...(membership?.role === 'MEMBER' ? { status: 'PENDING' } : {}),
           },
         }),
       ]);
 
       const file = await prisma.file.findUnique({ where: { id: existingFile.id } });
-      await logAction(ownerId, 'UPLOAD', 'FILE', existingFile.id, {
+      await logAction(ownerId, status === 'PENDING' ? 'FILE_UPLOADED_PENDING_APPROVAL' : 'UPLOAD', 'FILE', existingFile.id, {
         fileName: uploadedFile.originalname,
         versionNumber: file?.currentVersion,
         isNewVersion: true,
+        status,
       });
       res.json({
         success: true,
@@ -172,13 +182,14 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
         originalName: uploadedFile.originalname,
         mimeType: uploadedFile.mimetype || 'application/octet-stream',
         size: uploadedFile.size,
-        ownerId: folderAccess.ownerId || ownerId,
+        ownerId,
         orgId,
         folderId,
         storagePath,
         ivHex,
         authTagHex,
         extractedText,
+        status,
       },
     });
 
@@ -186,10 +197,11 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
       success: true,
       data: { file, isNewVersion: false },
     });
-    await logAction(ownerId, 'UPLOAD', 'FILE', file.id, {
+    await logAction(ownerId, status === 'PENDING' ? 'FILE_UPLOADED_PENDING_APPROVAL' : 'UPLOAD', 'FILE', file.id, {
       fileName: file.originalName,
       size: file.size,
       isNewVersion: false,
+      status,
     });
   } catch (error) {
     console.error('Upload file error:', error);
@@ -207,18 +219,37 @@ router.get('/', async (req: Request, res: Response) => {
     const folderId = getOptionalFolderId(req.query.folderId);
     const orgId = req.query.orgId ? String(req.query.orgId) : undefined;
 
+    const activeOrgId = orgId || req.user!.orgId;
+    const membership = activeOrgId
+      ? await prisma.orgMember.findUnique({ where: { userId_orgId: { userId: ownerId, orgId: activeOrgId } } })
+      : null;
     const files = await prisma.file.findMany({
       where: {
-        ownerId,
         deletedAt: null,
         ...(folderId !== undefined && { folderId }),
-        ...(orgId !== undefined && { orgId }),
+        ...(activeOrgId && membership ? {
+          orgId: activeOrgId,
+          OR: [{ status: 'APPROVED' }, { ownerId }],
+        } : { ownerId, ...(orgId !== undefined && { orgId }) }),
       },
       include: includeShareSummary,
       orderBy: [{ updatedAt: 'desc' }],
     });
 
-    res.json({ success: true, data: { files } });
+    const rejectionLogs = files.length ? await prisma.auditLog.findMany({
+      where: { action: 'FILE_REJECTED', targetType: 'FILE', targetId: { in: files.map((file) => file.id) } },
+      orderBy: { createdAt: 'desc' },
+      select: { targetId: true, metadata: true },
+    }) : [];
+    const reasons = new Map<string, string>();
+    rejectionLogs.forEach((log) => {
+      const reason = log.metadata && typeof log.metadata === 'object' && typeof (log.metadata as { reason?: unknown }).reason === 'string'
+        ? (log.metadata as { reason: string }).reason
+        : null;
+      if (reason && !reasons.has(log.targetId)) reasons.set(log.targetId, reason);
+    });
+
+    res.json({ success: true, data: { files: files.map((file) => ({ ...file, rejectionReason: reasons.get(file.id) || null })) } });
   } catch (error) {
     console.error('List files error:', error);
     res.status(500).json({

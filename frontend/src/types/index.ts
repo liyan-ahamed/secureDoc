@@ -65,6 +65,8 @@ export interface SecureFile {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectionReason?: string | null;
   shares?: Share[];
 }
 

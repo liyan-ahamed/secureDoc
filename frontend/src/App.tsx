@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Members from './pages/Members';
 import AcceptInvite from './pages/AcceptInvite';
 import Trash from './pages/Trash';
+import Approvals from './pages/Approvals';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         }
       />
       <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
+      <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
       <Route
         path="/org/members"
         element={

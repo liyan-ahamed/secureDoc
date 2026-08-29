@@ -165,19 +165,40 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     const [subfolders, files, path] = await Promise.all([
       prisma.folder.findMany({
-        where: { ownerId: folder.ownerId, parentId: folder.id, deletedAt: null },
+        where: {
+          parentId: folder.id,
+          deletedAt: null,
+          ...(folder.orgId ? { orgId: folder.orgId } : { ownerId: folder.ownerId }),
+        },
         include: includeShareSummary,
         orderBy: [{ name: 'asc' }],
       }),
       prisma.file.findMany({
-        where: { ownerId: folder.ownerId, folderId: folder.id, deletedAt: null },
+        where: {
+          folderId: folder.id,
+          deletedAt: null,
+          ...(folder.orgId ? { OR: [{ status: 'APPROVED' }, { ownerId: req.user!.userId }] } : { ownerId: folder.ownerId }),
+        },
         include: includeShareSummary,
         orderBy: [{ updatedAt: 'desc' }],
       }),
       getFolderPath(folder.ownerId, folder.id),
     ]);
 
-    res.json({ success: true, data: { folder, subfolders, files, path } });
+    const rejectionLogs = files.length ? await prisma.auditLog.findMany({
+      where: { action: 'FILE_REJECTED', targetType: 'FILE', targetId: { in: files.map((file) => file.id) } },
+      orderBy: { createdAt: 'desc' },
+      select: { targetId: true, metadata: true },
+    }) : [];
+    const reasons = new Map<string, string>();
+    rejectionLogs.forEach((log) => {
+      const reason = log.metadata && typeof log.metadata === 'object' && typeof (log.metadata as { reason?: unknown }).reason === 'string'
+        ? (log.metadata as { reason: string }).reason
+        : null;
+      if (reason && !reasons.has(log.targetId)) reasons.set(log.targetId, reason);
+    });
+
+    res.json({ success: true, data: { folder, subfolders, files: files.map((file) => ({ ...file, rejectionReason: reasons.get(file.id) || null })), path } });
   } catch (error) {
     console.error('Get folder error:', error);
     res.status(500).json({
