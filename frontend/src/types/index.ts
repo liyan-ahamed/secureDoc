@@ -66,6 +66,7 @@ export interface SecureFile {
   updatedAt: string;
   deletedAt?: string | null;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  driveType?: 'PERSONAL' | 'ORG';
   rejectionReason?: string | null;
   shares?: Share[];
 }

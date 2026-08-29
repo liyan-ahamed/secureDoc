@@ -80,7 +80,10 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
     const uploadedFile = req.file;
     const folderId = getOptionalFolderId(req.body.folderId) ?? null;
     const targetFileId = req.body.fileId ? String(req.body.fileId) : null;
-    const orgId = req.body.orgId || req.user!.orgId || null;
+    const targetOrgId = req.body.targetOrgId ? String(req.body.targetOrgId) : null;
+    // Preserve the legacy single-org upload path when targetOrgId is absent.
+    const orgId = targetOrgId || req.body.orgId || req.user!.orgId || null;
+    const driveType = targetOrgId ? 'ORG' : 'PERSONAL';
     const membership = orgId
       ? await prisma.orgMember.findUnique({ where: { userId_orgId: { userId: ownerId, orgId: String(orgId) } } })
       : null;
@@ -152,6 +155,7 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
             mimeType: uploadedFile.mimetype || 'application/octet-stream',
             size: uploadedFile.size,
             orgId,
+            driveType,
             storagePath,
             ivHex,
             authTagHex,
@@ -184,6 +188,7 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
         size: uploadedFile.size,
         ownerId,
         orgId,
+        driveType,
         folderId,
         storagePath,
         ivHex,
@@ -230,7 +235,7 @@ router.get('/', async (req: Request, res: Response) => {
         ...(activeOrgId && membership ? {
           orgId: activeOrgId,
           OR: [{ status: 'APPROVED' }, { ownerId }],
-        } : { ownerId, ...(orgId !== undefined && { orgId }) }),
+        } : { ownerId, ...(orgId === undefined && { driveType: 'PERSONAL' }), ...(orgId !== undefined && { orgId }) }),
       },
       include: includeShareSummary,
       orderBy: [{ updatedAt: 'desc' }],

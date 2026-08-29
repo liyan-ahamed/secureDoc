@@ -32,6 +32,17 @@ enum FileStatus {
   REJECTED
 }
 
+enum JoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DriveType {
+  PERSONAL
+  ORG
+}
+
 model User {
   id          String      @id @default(cuid())
   email       String      @unique
@@ -48,6 +59,8 @@ model User {
   sharesOwned    Share[]       @relation("ShareOwner")
   sharesReceived Share[]       @relation("ShareRecipient")
   auditLogs      AuditLog[]
+  joinRequests   JoinRequest[] @relation("JoinRequester")
+  respondedJoinRequests JoinRequest[] @relation("JoinResponder")
 
   @@map("users")
 }
@@ -62,6 +75,7 @@ model Org {
   folders Folder[]
   files   File[]
   invites Invite[]
+  joinRequests JoinRequest[]
 
   @@map("orgs")
 }
@@ -120,6 +134,7 @@ model File {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   deletedAt      DateTime?
+  driveType      DriveType @default(PERSONAL)
 
   owner    User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   org      Org?          @relation(fields: [orgId], references: [id], onDelete: SetNull)
@@ -129,7 +144,26 @@ model File {
 
   @@index([ownerId, folderId, deletedAt])
   @@index([orgId])
+  @@index([orgId, driveType, status])
   @@map("files")
+}
+
+model JoinRequest {
+  id            String            @id @default(cuid())
+  orgId         String
+  userId        String
+  status        JoinRequestStatus @default(PENDING)
+  requestedAt   DateTime          @default(now())
+  respondedAt   DateTime?
+  respondedById String?
+
+  org         Org   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user        User  @relation("JoinRequester", fields: [userId], references: [id], onDelete: Cascade)
+  respondedBy User? @relation("JoinResponder", fields: [respondedById], references: [id], onDelete: SetNull)
+
+  @@unique([orgId, userId])
+  @@index([orgId, status, requestedAt])
+  @@map("join_requests")
 }
 
 model FileVersion {

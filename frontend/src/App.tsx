@@ -9,6 +9,10 @@ import Members from './pages/Members';
 import AcceptInvite from './pages/AcceptInvite';
 import Trash from './pages/Trash';
 import Approvals from './pages/Approvals';
+import Organizations from './pages/Organizations';
+import OrgDrive from './pages/OrgDrive';
+import JoinRequests from './pages/JoinRequests';
+import MyOrganizations from './pages/MyOrganizations';
 
 function App() {
   return (
@@ -33,6 +37,10 @@ function App() {
       />
       <Route path="/trash" element={<ProtectedRoute><Trash /></ProtectedRoute>} />
       <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
+      <Route path="/organizations" element={<ProtectedRoute><Organizations /></ProtectedRoute>} />
+      <Route path="/organizations/mine" element={<ProtectedRoute><MyOrganizations /></ProtectedRoute>} />
+      <Route path="/organizations/:orgId/drive" element={<ProtectedRoute><OrgDrive /></ProtectedRoute>} />
+      <Route path="/organizations/:orgId/join-requests" element={<ProtectedRoute><JoinRequests /></ProtectedRoute>} />
       <Route
         path="/org/members"
         element={

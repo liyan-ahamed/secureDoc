@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Loader2, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import api from '../api/axios';
-import Navbar from '../components/Navbar';
+import AppShell from '../components/AppShell';
 import { useAuthStore } from '../store/authStore';
 
 export default function AcceptInvite() {
@@ -29,10 +29,8 @@ export default function AcceptInvite() {
   }, [token]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      <div className="flex-1 flex items-center justify-center p-4">
+    <AppShell>
+      <div className="min-h-full flex items-center justify-center p-4">
         <div className="max-w-md w-full glass-panel rounded-2xl p-8 text-center">
           {status === 'loading' && (
             <div className="flex flex-col items-center">
@@ -93,6 +91,6 @@ export default function AcceptInvite() {
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

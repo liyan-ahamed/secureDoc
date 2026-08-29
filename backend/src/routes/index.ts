@@ -10,6 +10,7 @@ import searchRouter from './search';
 import trashRouter from './trash';
 import approvalsRouter from './approvals';
 import usersRouter from './users';
+import orgMembershipRouter from './orgMembership';
 
 const router = Router();
 
@@ -19,6 +20,9 @@ router.use('/folders', foldersRouter);
 router.use('/files', filesRouter);
 router.use('/shares', sharesRouter);
 router.use('/audit', auditRouter);
+// New organization discovery, membership, and org-drive routes are isolated from
+// the legacy organization management router below.
+router.use('/orgs', orgMembershipRouter);
 router.use('/orgs', orgsRouter);
 router.use('/search', searchRouter);
 router.use('/trash', trashRouter);

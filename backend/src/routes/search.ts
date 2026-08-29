@@ -73,6 +73,9 @@ router.get('/', async (req: Request, res: Response) => {
           deletedAt: null,
           AND: [
             fileAccessFilter,
+            // Searches without an explicit organization remain personal-drive
+            // searches; the dedicated org-drive route owns ORG files.
+            ...(!membership && !orgId ? [{ driveType: 'PERSONAL' as const }] : []),
             {
               OR: [
                 { originalName: { contains: searchQuery, mode: 'insensitive' } },

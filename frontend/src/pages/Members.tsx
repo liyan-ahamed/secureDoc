@@ -1,9 +1,9 @@
 import { useEffect, useState, FormEvent, ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Folder, Loader2, Trash2, UserPlus, Users, X, Copy, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Loader2, Trash2, UserPlus, X, Copy } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
-import Navbar from '../components/Navbar';
+import AppShell from '../components/AppShell';
 
 type OrgMember = {
   id: string;
@@ -119,39 +119,8 @@ export default function Members() {
   };
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-
-      <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden lg:block">
-          <Link
-            to="/dashboard"
-            className="w-full h-9 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
-          >
-            <Folder className="w-4 h-4 text-accent" />
-            My Drive
-          </Link>
-          <Link
-            to="/dashboard?view=shared"
-            className="w-full h-9 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
-          >
-            <Users className="w-4 h-4 text-accent" />
-            Shared with me
-          </Link>
-          <div className="w-full h-9 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left bg-accent/10 text-accent font-medium transition-colors">
-            <Users className="w-4 h-4 text-accent" />
-            Members
-          </div>
-          <Link
-            to="/audit"
-            className="w-full h-9 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
-          >
-            <ShieldCheck className="w-4 h-4 text-accent" />
-            Audit
-          </Link>
-        </aside>
-
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
+    <AppShell>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
             <div>
               <h1 className="text-xl font-semibold text-primary">Organization Members</h1>
@@ -237,8 +206,7 @@ export default function Members() {
               </div>
             )}
           </section>
-        </main>
-      </div>
+        </div>
 
       {inviteModalOpen && (
         <Modal onClose={() => setInviteModalOpen(false)} title="Invite Member">
@@ -312,7 +280,7 @@ export default function Members() {
           )}
         </Modal>
       )}
-    </div>
+    </AppShell>
   );
 }
 

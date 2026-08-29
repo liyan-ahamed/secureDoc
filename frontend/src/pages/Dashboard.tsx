@@ -24,11 +24,13 @@ import {
   Check,
   ShieldCheck,
   ClipboardCheck,
+  Building2,
 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 import { FileVersion, SecureFile, SecureFolder, Share, SharePermission, ShareUser } from '../types';
 import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
 
 type Toast = { message: string; type: 'success' | 'error' };
 type FolderTreeNode = SecureFolder & { children: FolderTreeNode[] };
@@ -435,7 +437,8 @@ const Dashboard = () => {
       <Navbar />
 
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        <aside className="w-72 shrink-0 border-r border-white/10 bg-zinc-950/35 backdrop-blur-2xl p-4 hidden lg:block">
+        <Sidebar />
+        <aside className="hidden">
           <button
             onClick={() => { setFolderName(''); setFolderModal({ mode: 'create' }); }}
             className="w-full py-2 px-4 mb-4 rounded-md bg-accent text-bg text-sm font-medium flex items-center justify-center gap-2 hover:bg-accent-hover transition-colors cursor-pointer shadow-sm"
@@ -468,6 +471,22 @@ const Dashboard = () => {
             Shared with me
           </button>
 
+          <Link
+            to="/audit"
+            className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4 text-accent" />
+            Audit
+          </Link>
+
+          <Link
+            to="/trash"
+            className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
+          >
+            <Trash2 className="w-4 h-4 text-accent" />
+            Trash
+          </Link>
+
           {user?.orgMemberships && user.orgMemberships.length > 0 && (
             <Link
               to="/org/members"
@@ -486,21 +505,11 @@ const Dashboard = () => {
             </Link>
           )}
 
-          <Link
-            to="/audit"
-            className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
-          >
-            <ShieldCheck className="w-4 h-4 text-accent" />
-            Audit
-          </Link>
-
-          <Link
-            to="/trash"
-            className="w-full py-2 mt-1 px-3 rounded-md flex items-center gap-2.5 text-sm text-left text-muted hover:text-primary hover:bg-bg transition-colors"
-          >
-            <Trash2 className="w-4 h-4 text-accent" />
-            Trash
-          </Link>
+          <div className="mt-4 pt-3 border-t border-border space-y-0.5">
+            <p className="px-2 pb-1.5 text-xs font-semibold text-muted uppercase tracking-wider">Organizations</p>
+            <Link to="/organizations" className="w-full py-2 px-3 rounded-md flex items-center gap-2.5 text-sm text-muted hover:text-primary hover:bg-bg transition-colors"><Building2 className="w-4 h-4 text-accent" />Discover</Link>
+            <Link to="/organizations/mine" className="w-full py-2 px-3 rounded-md flex items-center gap-2.5 text-sm text-muted hover:text-primary hover:bg-bg transition-colors"><Building2 className="w-4 h-4 text-accent" />My Organizations</Link>
+          </div>
 
           <div className="mt-4 pt-3 border-t border-border space-y-0.5">
             <p className="px-2 pb-1.5 text-xs font-semibold text-muted uppercase tracking-wider">Folders</p>
