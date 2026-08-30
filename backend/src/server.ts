@@ -50,6 +50,7 @@ const startServer = async () => {
   }
 
   app.listen(config.port, () => {
+    console.info('CORS allowed origins:', allowedOrigins);
   });
 
   const purgeTrash = () => autoPurgeTrash().catch((error) => console.error('Automatic trash purge failed:', error));
