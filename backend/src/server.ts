@@ -21,6 +21,7 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: true,
 }));
+console.log('CORS configured with origins:', allowedOrigins);
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -49,9 +50,7 @@ const startServer = async () => {
     console.warn('⚠️  Redis not available — start Docker containers to connect');
   }
 
-  app.listen(config.port, () => {
-    console.info('CORS allowed origins:', allowedOrigins);
-  });
+  app.listen(config.port, () => {});
 
   const purgeTrash = () => autoPurgeTrash().catch((error) => console.error('Automatic trash purge failed:', error));
   purgeTrash();
